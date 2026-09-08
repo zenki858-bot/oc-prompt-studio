@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="OC Studio">
-<title>OC Prompt Studio v0.2</title>
+<title>OC Prompt Studio v0.3</title>
 <style>
 :root{
   --bg:#0b1020; --surface:#121a2b; --surface2:#182237; --surface3:#202d46;
@@ -135,6 +135,35 @@ input[type="range"]{padding:0;min-height:34px;background:transparent;border:none
   .choice-grid{grid-template-columns:1fr}
   .matrix{height:225px}
 }
+
+.import-controls{display:grid;gap:10px}
+.import-row{border:1px solid var(--line);background:#0e1728;border-radius:14px;padding:11px}
+.import-row-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.import-label{font-size:13px;font-weight:850;color:var(--soft)}
+.import-path{font-size:9px;color:#71839f;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;margin-top:2px;word-break:break-all}
+.import-values{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.import-value{border:1px solid #263753;border-radius:10px;padding:8px;background:#0b1322;min-height:55px}
+.import-value b{display:block;font-size:9px;color:var(--muted);margin-bottom:4px;text-transform:uppercase}
+.import-value span{display:block;font-size:12px;line-height:1.45;word-break:break-word;white-space:pre-wrap}
+.import-select{display:flex;align-items:center;gap:7px;margin-top:8px}
+.import-select input{width:22px;min-height:22px;accent-color:var(--accent)}
+.import-select label{font-size:12px;font-weight:750;color:var(--soft)}
+.status{display:inline-flex;align-items:center;min-height:24px;padding:3px 7px;border-radius:999px;font-size:10px;font-weight:900;border:1px solid var(--line);white-space:nowrap}
+.status.confirmed{color:var(--good);background:rgba(142,230,189,.08);border-color:rgba(142,230,189,.35)}
+.status.inferred{color:var(--warn);background:rgba(255,210,138,.08);border-color:rgba(255,210,138,.35)}
+.status.ai{color:#d5c6ff;background:rgba(189,164,255,.10);border-color:rgba(189,164,255,.35)}
+.status.conflict{color:var(--bad);background:rgba(255,159,168,.08);border-color:rgba(255,159,168,.35)}
+.import-summary{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0 0}
+.summary-chip{font-size:10px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:5px 8px}
+.import-section-title{font-size:14px;font-weight:900;margin:14px 0 8px;color:var(--soft)}
+.raw-preview{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px}
+.filelike{display:inline-flex}
+.filelike input{display:none}
+.filelike button{pointer-events:none}
+@media(max-width:560px){
+  .import-values{grid-template-columns:1fr}
+}
+
 </style>
 </head>
 <body>
@@ -145,13 +174,14 @@ input[type="range"]{padding:0;min-height:34px;background:transparent;border:none
       <h1>OC Prompt Studio</h1>
       <p>キャラクター設計と画像生成プロンプトを、iPhoneで整理・出力</p>
     </div>
-    <span class="version">v0.2</span>
+    <span class="version">v0.3</span>
   </div>
 </header>
 
 <nav class="topnav" id="topnav">
   <button class="active" data-main="character">キャラ作成</button>
   <button data-main="prompt">プロンプト</button>
+  <button data-main="importer">インポート</button>
   <button data-main="library">語彙辞書</button>
   <button data-main="storage">保存・出力</button>
 </nav>
@@ -477,6 +507,7 @@ input[type="range"]{padding:0;min-height:34px;background:transparent;border:none
         <button id="outText">AI用テキスト</button>
         <button id="outJson">JSON</button>
         <button id="outLore">Lorebook</button>
+        <button id="outAIComplete">AI完成依頼</button>
         <button id="sendPrompt">画像Promptへ反映</button>
       </div>
       <div class="outputbox">
@@ -573,6 +604,117 @@ input[type="range"]{padding:0;min-height:34px;background:transparent;border:none
   </div>
 </section>
 
+
+<section id="importer" class="mainpanel">
+  <div class="hero">
+    <h2>インポート・逆解析</h2>
+    <p>ChatGPTで完成させたJSON、別ツールのJSON、既存の画像生成プロンプト、設定文などを読み込み、現在の項目へ逆変換します。読み込む前に差分を確認できます。</p>
+  </div>
+
+  <nav class="subnav" data-subnav="importer">
+    <button class="active" data-sub="impinput">入力</button>
+    <button data-sub="impreview">解析結果</button>
+    <button data-sub="impapply">差分・反映</button>
+  </nav>
+
+  <div id="impinput" class="subpanel active" data-parent="importer">
+    <div class="card">
+      <div class="card-title"><h3>読み込み元</h3><span class="badge">自動判定対応</span></div>
+      <div class="grid2">
+        <div class="field">
+          <div class="field-head"><span class="field-title">データ形式</span></div>
+          <select id="imp_type">
+            <option value="auto">自動判定</option>
+            <option value="ocps">OC Prompt Studio JSON</option>
+            <option value="json">任意のJSON</option>
+            <option value="prompt">画像生成プロンプト</option>
+            <option value="text">キャラクター設定文・自然文</option>
+            <option value="lore">Lorebook形式</option>
+          </select>
+        </div>
+        <div class="field">
+          <div class="field-head"><span class="field-title">主な反映先</span></div>
+          <select id="imp_target">
+            <option value="auto">自動（推奨）</option>
+            <option value="character">キャラクター項目</option>
+            <option value="prompt">画像Prompt項目</option>
+            <option value="both">両方</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field hidden" id="imp_picker_wrap">
+        <div class="field-head"><span class="field-title">JSON内のキャラクター</span></div>
+        <select id="imp_character_picker"></select>
+        <p class="field-help">バックアップJSONなどに複数キャラクターが含まれる場合に選択できます。</p>
+      </div>
+
+      <div class="field">
+        <div class="field-head"><span class="field-title">読み込む内容</span><span class="field-tag">貼り付け可</span></div>
+        <textarea id="imp_source" class="raw-preview" placeholder='例1：ChatGPTから返された OCPS-CHAR-2 JSON
+例2：{"character_name":"Alice","hair":"long black hair","eyes":"blue"}
+例3：1girl, long black hair, hime cut, blue eyes, gothic dress, ...'></textarea>
+      </div>
+
+      <div class="pills">
+        <button class="primary" id="imp_analyze">解析する</button>
+        <button id="imp_paste">クリップボードから貼る</button>
+        <label class="filelike"><input id="imp_file" type="file" accept=".json,.txt,.md,text/plain,application/json"><button type="button">ファイルを選択</button></label>
+        <button id="imp_clear">クリア</button>
+      </div>
+      <div class="notice" style="margin-top:12px">
+        JSONは項目名の表記揺れもある程度吸収します。画像プロンプトや自然文からの逆変換は推測を含むため、「確認済み」「推測」「AI補完」を分けて表示します。
+      </div>
+    </div>
+  </div>
+
+  <div id="impreview" class="subpanel" data-parent="importer">
+    <div class="card">
+      <div class="card-title"><h3>解析結果</h3><span class="badge" id="imp_detected">未解析</span></div>
+      <div id="imp_summary" class="import-summary"></div>
+      <div id="imp_char_preview"></div>
+      <div id="imp_prompt_preview"></div>
+      <div id="imp_unmapped_wrap" class="hidden">
+        <div class="import-section-title">未割り当て情報</div>
+        <div class="section-note" id="imp_unmapped"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="impapply" class="subpanel" data-parent="importer">
+    <div class="card">
+      <div class="card-title"><h3>差分と反映方法</h3><span class="badge">上書き事故防止</span></div>
+      <div class="grid2">
+        <div class="field">
+          <div class="field-head"><span class="field-title">キャラの反映先</span></div>
+          <select id="imp_destination">
+            <option value="current">現在のキャラクターへ統合</option>
+            <option value="new">新規キャラクターとして読み込む</option>
+          </select>
+        </div>
+        <div class="field">
+          <div class="field-head"><span class="field-title">統合ルール</span></div>
+          <select id="imp_merge">
+            <option value="review">差分を確認して選択（推奨）</option>
+            <option value="blank">空欄だけ補完</option>
+            <option value="current">現在値を優先</option>
+            <option value="incoming">読込値を優先</option>
+            <option value="replace">完全置換</option>
+          </select>
+        </div>
+      </div>
+      <p class="section-note">下のチェックがONの項目だけ反映します。「差分を確認」では、既存値と競合する項目は初期状態でOFFになります。</p>
+      <div id="imp_diff"></div>
+      <div class="toolbar">
+        <button class="primary" id="imp_apply">選択項目を反映</button>
+        <button id="imp_select_additions">追加項目だけ選択</button>
+        <button id="imp_select_all">全選択</button>
+        <button id="imp_select_none">全解除</button>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section id="library" class="mainpanel">
   <div class="hero">
     <h2>語彙辞書</h2>
@@ -622,6 +764,7 @@ input[type="range"]{padding:0;min-height:34px;background:transparent;border:none
 const $=id=>document.getElementById(id);
 const $$=sel=>[...document.querySelectorAll(sel)];
 const STORE={chars:"ocps2_chars",words:"ocps2_words",prompt:"ocps2_prompt"};
+let fieldMetaState={};
 
 function toast(s){const e=$("toast");e.textContent=s;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),1700)}
 function uid(){const a=crypto.getRandomValues(new Uint32Array(1))[0].toString(36).toUpperCase().slice(0,6);return "CHAR-"+a}
@@ -750,7 +893,7 @@ function characterData(){
     backstory:v("c_backstory"),occupation:v("c_occupation"),ability:v("c_ability"),goal:v("c_goal"),values:v("c_values"),
     conflict:v("c_conflict"),likes:v("c_likes"),dislikes:v("c_dislikes"),
     relations:v("c_relations").split("\n").map(x=>x.trim()).filter(Boolean),
-    ai_decide:ai,ai_policy:v("c_ai_policy"),fixed:v("c_fixed"),updated_at:new Date().toISOString()
+    ai_decide:ai,ai_policy:v("c_ai_policy"),fixed:v("c_fixed"),field_meta:{...fieldMetaState},updated_at:new Date().toISOString()
   };
 }
 function dirLabel(n,l,r){if(n<=15)return"強く"+l+"寄り";if(n<=35)return l+"寄り";if(n<65)return"中間";if(n<85)return r+"寄り";return"強く"+r+"寄り"}
@@ -857,6 +1000,7 @@ function saveCharacter(){
   localStorage.setItem(STORE.chars,JSON.stringify(a));renderSaved();toast("保存しました");
 }
 function setCharacter(c){
+  fieldMetaState={...(c.field_meta||{})};
   setv("c_id",c.id);setv("c_name",c.name);setv("c_alias",c.alias);setv("c_project",c.project);setv("c_world",c.world);setv("c_concept",c.concept);setv("c_tags",(c.tags||[]).join(" "));
   setSelect("c_role",c.role);
   const a=c.appearance||{};
@@ -889,6 +1033,33 @@ $("saveChar").onclick=saveCharacter;
 $("outText").onclick=()=>{$("charOutTitle").textContent="AI用テキスト";setv("charOut",charText(characterData()))};
 $("outJson").onclick=()=>{$("charOutTitle").textContent="JSON";setv("charOut",JSON.stringify(characterData(),null,2))};
 $("outLore").onclick=()=>{$("charOutTitle").textContent="Lorebook";setv("charOut",loreText(characterData()))};
+
+$("outAIComplete").onclick=()=>{
+  const c=characterData();
+  const payload=JSON.stringify(c,null,2);
+  const req=`以下は OC Prompt Studio のキャラクターJSONです。
+このデータを完成させてください。
+
+【厳守】
+1. 既に明示されている値は変更しない。
+2. ai_decide に含まれる項目は積極的に補完してよい。
+3. ai_decide に含まれなくても、空欄のままだとキャラクターとして成立しにくい項目は「提案」として補完してよいが、既存指定と矛盾させない。
+4. matrices と likert の数値は既存値を尊重する。変更が必要なら理由を説明せず、元値を維持する。
+5. 出力は説明文を付けず、OCPS-CHAR-2互換のJSONだけにする。
+6. AIが新規に決めた・補完したフィールドは field_meta に追加し、
+   {"status":"ai","confidence":0.0〜1.0,"source":"AI completion"}
+   と記録する。
+7. 元から存在する field_meta は削除しない。
+8. schema は "OCPS-CHAR-2" のままにする。
+9. _completion_by_ai: true をトップレベルに追加する。
+
+【入力JSON】
+${payload}`;
+  $("charOutTitle").textContent="ChatGPT / Gemini 用・キャラ完成依頼";
+  setv("charOut",req);
+  toast("AI完成依頼を作成しました");
+};
+
 $("sendPrompt").onclick=()=>{charToPrompt(characterData());activateMain("prompt");activateSub("prompt","pcharacter");toast("画像Promptへ反映しました")};
 $("copyCharOut").onclick=()=>copyText(v("charOut"));
 $("shareCharOut").onclick=()=>shareText("OC Character Data",v("charOut"));
@@ -1000,6 +1171,428 @@ $("restoreButton").onclick=()=>$("restoreFile").click();
 $("makeBackup").onclick=()=>{const o={schema:"OCPS-BACKUP-2",exported_at:new Date().toISOString(),characters:getChars(),customWords:getCustomWords(),lastPrompt:safeParse(localStorage.getItem(STORE.prompt),null)};setv("backupArea",JSON.stringify(o,null,2));toast("作成しました")};
 $("copyBackup").onclick=()=>copyText(v("backupArea"));
 $("restoreFile").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const o=JSON.parse(await f.text());if(!Array.isArray(o.characters))throw Error("形式が違います");localStorage.setItem(STORE.chars,JSON.stringify(o.characters));localStorage.setItem(STORE.words,JSON.stringify(o.customWords||[]));if(o.lastPrompt)localStorage.setItem(STORE.prompt,JSON.stringify(o.lastPrompt));renderSaved();renderLib();toast("復元しました")}catch(err){toast("読み込み失敗："+err.message)}};
+
+
+/* ===== Import / reverse parsing ===== */
+const FIELD_DEFS=[
+["id","固有ID"],["name","名前"],["alias","読み・別名"],["project","作品・企画"],["role","役割"],["world","舞台・世界観"],["concept","一文コンセプト"],
+["appearance.age_feel","年齢感"],["appearance.gender","性別・ジェンダー表現"],["appearance.species","種族"],["appearance.height","身長感"],["appearance.body","体型"],["appearance.skin","肌"],
+["appearance.hair_color","髪色"],["appearance.hair_length","髪の長さ"],["appearance.hair_style","髪型"],["appearance.bangs","前髪"],
+["appearance.eye_color","瞳の色"],["appearance.eye_shape","目の形"],["appearance.face","顔立ち"],["appearance.face_feature","顔の特徴"],
+["appearance.outfit_category","衣装カテゴリ"],["appearance.outfit","具体的な衣装"],["appearance.palette","配色"],["appearance.motif","モチーフ"],["appearance.accessory","アクセサリー"],
+["personality_notes","性格・口調の補足"],["first_person","一人称"],["speech","口調・語尾"],["backstory","背景・経歴"],["occupation","立場・職業"],["ability","得意・能力"],
+["goal","目的・欲求"],["values","価値観・信念"],["conflict","弱点・葛藤"],["likes","好きなもの"],["dislikes","嫌い・苦手"],["relations","関係性"],["tags","検索タグ"],
+["matrices.visual.x","外見：可愛い↔格好いい"],["matrices.visual.y","外見：素朴↔華やか"],["matrices.social.x","対人：内向↔外向"],["matrices.social.y","行動：受動↔能動"],["matrices.tone.x","印象：現実↔幻想"],["matrices.tone.y","印象：明るい↔ダーク"],
+...likerts.map(([k,n])=>[`likert.${k}`,`性格尺度：${n}`]),
+["ai_decide","AIに決めてよい項目"],["ai_policy","AI補完方針"],["fixed","絶対に変えない条件"]
+];
+const FIELD_LABEL=Object.fromEntries(FIELD_DEFS);
+
+const PROMPT_FIELD_DEFS=[
+["subject","主体・キャラクター"],["hair","髪"],["face","顔・瞳・表情"],["outfit","衣装・装飾"],["pose","ポーズ・動作"],
+["camera","構図・カメラ"],["background","背景・場所"],["light","光・色・空気感"],["style","画風・質感"],["extra","補足・未解釈"],["negative","ネガティブ"]
+];
+
+let importState={type:"",charCandidate:{},charMeta:{},promptCandidate:{},promptMeta:{},unmapped:[],rawObject:null,selectedBackupIndex:0};
+
+function getPath(o,path){return path.split(".").reduce((a,k)=>a==null?undefined:a[k],o)}
+function setPath(o,path,value){
+  const a=path.split(".");let cur=o;
+  a.slice(0,-1).forEach(k=>{if(!cur[k]||typeof cur[k]!=="object"||Array.isArray(cur[k]))cur[k]={};cur=cur[k]});
+  cur[a[a.length-1]]=value;return o;
+}
+function hasMeaningful(x){
+  if(x===undefined||x===null)return false;
+  if(Array.isArray(x))return x.length>0;
+  if(typeof x==="string")return x.trim()!=="";
+  return true;
+}
+function displayVal(x){
+  if(x===undefined||x===null||x==="")return "—";
+  if(Array.isArray(x))return x.join(" / ");
+  if(typeof x==="object")return JSON.stringify(x);
+  return String(x);
+}
+function sameVal(a,b){return JSON.stringify(a??"")===JSON.stringify(b??"")}
+function statusName(s){return s==="ai"?"AI補完":s==="confirmed"?"確認済み":"推測"}
+function setCandidate(obj,meta,path,value,status="inferred",confidence=.7,source="解析",overwrite=false){
+  if(!hasMeaningful(value))return;
+  if(!overwrite&&hasMeaningful(getPath(obj,path)))return;
+  setPath(obj,path,value);
+  meta[path]={status,confidence,source};
+}
+function normalizeKey(s){return String(s).toLowerCase().replace(/[._\-\s/\\[\](){}:：・]+/g,"").replace(/colour/g,"color")}
+function flattenObject(o,prefix="",out=[]){
+  if(Array.isArray(o)){out.push([prefix,o]);return out}
+  if(o&&typeof o==="object"){
+    Object.entries(o).forEach(([k,vv])=>flattenObject(vv,prefix?prefix+"."+k:k,out));
+  }else out.push([prefix,o]);
+  return out;
+}
+function extractJSONText(s){
+  let t=s.trim().replace(/^```(?:json)?\s*/i,"").replace(/\s*```$/,"").trim();
+  const first=t.indexOf("{"),last=t.lastIndexOf("}");
+  if(first>=0&&last>first)t=t.slice(first,last+1);
+  return t;
+}
+function parseJSONMaybe(s){try{return JSON.parse(extractJSONText(s))}catch{return null}}
+function isOCPS(o){return !!(o&&typeof o==="object"&&(String(o.schema||"").startsWith("OCPS-CHAR")||o.appearance&&o.matrices&&o.likert))}
+function candidateFromOCPS(o,defaultStatus="confirmed"){
+  const c={},m={};
+  FIELD_DEFS.forEach(([path])=>{
+    const val=getPath(o,path);
+    if(hasMeaningful(val)){
+      const saved=o.field_meta?.[path];
+      setCandidate(c,m,path,val,saved?.status||defaultStatus,saved?.confidence??1,saved?.source||"OC Prompt Studio JSON",true);
+    }
+  });
+  return {candidate:c,meta:m};
+}
+const JSON_ALIASES={
+  id:["id","characterid","charid","固有id","識別id"],
+  name:["name","charactername","charname","名前","キャラクター名"],
+  alias:["alias","reading","nickname","別名","読み","よみ"],
+  project:["project","series","work","作品","企画","作品名","企画名"],
+  role:["role","characterrole","役割","立場"],
+  world:["world","setting","worldsetting","舞台","世界観"],
+  concept:["concept","coreconcept","summary","キャラコンセプト","一文コンセプト"],
+  "appearance.age_feel":["agefeel","ageappearance","visualage","年齢感","見た目年齢"],
+  "appearance.gender":["gender","sex","genderpresentation","性別","ジェンダー","ジェンダー表現"],
+  "appearance.species":["species","race","種族"],
+  "appearance.height":["height","heightfeel","身長","身長感"],
+  "appearance.body":["body","bodytype","build","physique","体型","体格"],
+  "appearance.skin":["skin","skintone","skincolor","肌","肌色"],
+  "appearance.hair_color":["haircolor","髪色","髪の色"],
+  "appearance.hair_length":["hairlength","髪長","髪の長さ","髪丈"],
+  "appearance.hair_style":["hairstyle","髪型","ヘアスタイル"],
+  "appearance.bangs":["bangs","fringe","前髪"],
+  "appearance.eye_color":["eyecolor","eyescolor","瞳色","目色","瞳の色"],
+  "appearance.eye_shape":["eyeshape","目の形","瞳形"],
+  "appearance.face":["face","facetype","顔立ち","顔型"],
+  "appearance.face_feature":["facefeature","facialfeature","顔特徴","顔の特徴"],
+  "appearance.outfit_category":["outfitcategory","clothingcategory","衣装カテゴリ","服装カテゴリ"],
+  "appearance.outfit":["outfit","clothes","clothing","costume","dress","衣装","服装"],
+  "appearance.palette":["palette","colorpalette","配色","カラーパレット"],
+  "appearance.motif":["motif","theme","モチーフ"],
+  "appearance.accessory":["accessory","accessories","装飾","アクセサリー","特徴物"],
+  personality_notes:["personality","personalitynotes","性格","性格メモ"],
+  first_person:["firstperson","pronoun","一人称"],
+  speech:["speech","speakingstyle","voice","口調","話し方","語尾"],
+  backstory:["backstory","background","history","経歴","過去","背景"],
+  occupation:["occupation","job","position","職業","現在の立場"],
+  ability:["ability","abilities","skill","skills","能力","得意"],
+  goal:["goal","desire","objective","目的","欲求"],
+  values:["values","belief","beliefs","価値観","信念"],
+  conflict:["conflict","weakness","weaknesses","弱点","葛藤"],
+  likes:["likes","favorite","favorites","好き","好きなもの"],
+  dislikes:["dislikes","hate","hates","嫌い","苦手"],
+  relations:["relations","relationships","relationship","関係","関係性"],
+  tags:["tags","tag","タグ","検索タグ"]
+};
+const ALIAS_LOOKUP={};
+Object.entries(JSON_ALIASES).forEach(([path,arr])=>arr.forEach(x=>ALIAS_LOOKUP[normalizeKey(x)]=path));
+
+function parseArbitraryJSON(o){
+  const c={},m={},unmapped=[],textFragments=[];
+  flattenObject(o).forEach(([full,val])=>{
+    if(!full)return;
+    const last=full.split(".").pop(), nk=normalizeKey(last), nfull=normalizeKey(full);
+    let path=ALIAS_LOOKUP[nk]||ALIAS_LOOKUP[nfull];
+    if(!path){
+      // Common nested paths
+      const hints=[
+        ["appearancehaircolor","appearance.hair_color"],["appearancehairlength","appearance.hair_length"],["appearancehairstyle","appearance.hair_style"],
+        ["appearanceeyecolor","appearance.eye_color"],["appearanceeyeshape","appearance.eye_shape"],["appearanceoutfit","appearance.outfit"],
+        ["charactername","name"],["characterpersonality","personality_notes"]
+      ];
+      path=hints.find(([k])=>nfull.endsWith(k))?.[1];
+    }
+    if(path){
+      let vv=val;
+      if((path==="relations"||path==="tags")&&!Array.isArray(vv))vv=String(vv).split(/[\n,]+/).map(x=>x.trim()).filter(Boolean);
+      setCandidate(c,m,path,vv,"confirmed",.95,`JSON: ${full}`,true);
+    }else{
+      if(typeof val==="string"&&val.trim())textFragments.push(val.trim());
+      if(val!==null&&typeof val!=="object")unmapped.push(`${full}: ${displayVal(val)}`);
+    }
+  });
+  // If generic fields like hair/eyes contain descriptions, infer from them.
+  const allText=textFragments.join(", ");
+  if(allText){
+    const inferred=parseCharacterText(allText,true);
+    FIELD_DEFS.forEach(([path])=>{
+      const vv=getPath(inferred.candidate,path);
+      if(hasMeaningful(vv)&&!hasMeaningful(getPath(c,path)))setCandidate(c,m,path,vv,"inferred",inferred.meta[path]?.confidence??.65,`JSON内文章: ${inferred.meta[path]?.source||"text"}`);
+    });
+  }
+  return {candidate:c,meta:m,unmapped};
+}
+
+function parseCharacterText(text,compact=false){
+  const c={},m={},unmapped=[];
+  const add=(p,val,conf=.75,src="自然文")=>setCandidate(c,m,p,val,"inferred",conf,src);
+
+  // OCPS text / labeled Japanese and English lines
+  const lineRules=[
+    [/^ID:\s*(.+)$/mi,"id"],[/^Name:\s*(.+)$/mi,"name"],[/^Alias\/Reading:\s*(.+)$/mi,"alias"],[/^Project:\s*(.+)$/mi,"project"],[/^Role:\s*(.+)$/mi,"role"],[/^World\/Setting:\s*(.+)$/mi,"world"],
+    [/^- Age feel:\s*(.+)$/mi,"appearance.age_feel"],[/^- Gender presentation:\s*(.+)$/mi,"appearance.gender"],[/^- Species:\s*(.+)$/mi,"appearance.species"],[/^- Height:\s*(.+)$/mi,"appearance.height"],[/^- Body:\s*(.+)$/mi,"appearance.body"],[/^- Skin:\s*(.+)$/mi,"appearance.skin"],
+    [/^- Outfit category:\s*(.+)$/mi,"appearance.outfit_category"],[/^- Outfit:\s*(.+)$/mi,"appearance.outfit"],[/^- Palette:\s*(.+)$/mi,"appearance.palette"],[/^- Motif:\s*(.+)$/mi,"appearance.motif"],[/^- Accessory:\s*(.+)$/mi,"appearance.accessory"],
+    [/^(?:名前|キャラクター名)\s*[：:]\s*(.+)$/mi,"name"],[/^(?:世界観|舞台)\s*[：:]\s*(.+)$/mi,"world"],[/^(?:役割)\s*[：:]\s*(.+)$/mi,"role"],[/^(?:性格)\s*[：:]\s*(.+)$/mi,"personality_notes"],[/^(?:経歴|過去)\s*[：:]\s*(.+)$/mi,"backstory"],[/^(?:目的|欲求)\s*[：:]\s*(.+)$/mi,"goal"]
+  ];
+  lineRules.forEach(([re,p])=>{const mm=text.match(re);if(mm&&mm[1]&&!/^(未指定|\[未指定\])$/.test(mm[1].trim()))add(p,mm[1].trim(),.97,"明示ラベル")});
+  const core=text.match(/## Core Concept\s*\n([\s\S]*?)(?=\n##|\n#|$)/i);if(core&&core[1].trim()!=="未指定")add("concept",core[1].trim(),.97,"Core Concept");
+  const pers=text.match(/## Personality \/ Voice\s*\n([\s\S]*?)(?=\n##|\n#|$)/i);if(pers){const t=pers[1].split("\n").filter(x=>!x.trim().startsWith("-")).join(" ").trim();if(t&&t!=="未指定")add("personality_notes",t,.95,"Personality section")}
+
+  const lower=text.toLowerCase();
+  const contains=(arr)=>arr.find(([a])=>lower.includes(a.toLowerCase()));
+  const simpleMaps=[
+    ["appearance.gender",[["1girl","女性"],["girl","女性"],["woman","女性"],["少女","女性"],["女性","女性"],["1boy","男性"],["boy","男性"],["man","男性"],["少年","男性"],["男性","男性"],["androgynous","中性的"],["中性的","中性的"]]],
+    ["appearance.species",[["artificial life","人造生命"],["人造生命","人造生命"],["elf","エルフ"],["エルフ","エルフ"],["demon","悪魔"],["悪魔","悪魔"],["angel","天使"],["天使","天使"],["fairy","妖精"],["妖精","妖精"],["beastman","獣人"],["獣人","獣人"]]],
+    ["appearance.hair_color",[["platinum blonde","プラチナブロンド"],["silver hair","銀"],["銀髪","銀"],["white hair","白"],["白髪","白"],["black hair","黒"],["黒髪","黒"],["dark brown hair","ダークブラウン"],["brown hair","ブラウン"],["茶髪","ブラウン"],["auburn hair","赤茶"],["赤茶","赤茶"],["blonde hair","金"],["金髪","金"],["red hair","赤"],["赤髪","赤"],["pink hair","ピンク"],["ピンク髪","ピンク"],["purple hair","紫"],["紫髪","紫"],["blue hair","青"],["青髪","青"],["green hair","緑"],["緑髪","緑"]]],
+    ["appearance.hair_length",[["very long hair","超ロング"],["super long hair","超ロング"],["超ロング","超ロング"],["waist-length hair","腰まで"],["腰まで","腰まで"],["long hair","ロング"],["長髪","ロング"],["ロング","ロング"],["medium hair","ミディアム"],["ミディアム","ミディアム"],["shoulder-length hair","肩まで"],["short hair","ショート"],["ショート","ショート"]]],
+    ["appearance.hair_style",[["hime cut","姫カット"],["姫カット","姫カット"],["half updo","ハーフアップ"],["ハーフアップ","ハーフアップ"],["half twintails","ハーフツイン"],["ハーフツイン","ハーフツイン"],["low twintails","ローツイン"],["ローツイン","ローツイン"],["twintails","ツインテール"],["ツインテール","ツインテール"],["side ponytail","サイドテール"],["ponytail","ポニーテール"],["ポニーテール","ポニーテール"],["fishtail braid","フィッシュボーン"],["crown braid","クラウンブレイド"],["braid","三つ編み"],["三つ編み","三つ編み"],["drill hair","縦ロール"],["縦ロール","縦ロール"],["bob cut","ボブ"],["ボブ","ボブ"],["wolf cut","ウルフカット"],["ウルフ","ウルフカット"],["loose wavy hair","ゆるいウェーブ"],["wavy hair","ゆるいウェーブ"],["ウェーブ","ゆるいウェーブ"],["straight hair","ストレート"]]],
+    ["appearance.bangs",[["blunt bangs","ぱっつん"],["ぱっつん","ぱっつん"],["see-through bangs","シースルーバング"],["シースルーバング","シースルーバング"],["side-swept bangs","斜め前髪"],["center-parted bangs","センター分け"],["hair over one eye","片目隠れ"],["片目隠れ","片目隠れ"],["ahoge","アホ毛あり"],["アホ毛","アホ毛あり"]]],
+    ["appearance.eye_color",[["blue eyes","青"],["青い瞳","青"],["青眼","青"],["red eyes","赤"],["赤い瞳","赤"],["green eyes","緑"],["緑の瞳","緑"],["purple eyes","紫"],["紫の瞳","紫"],["golden eyes","金"],["gold eyes","金"],["金の瞳","金"],["amber eyes","琥珀"],["brown eyes","茶"],["gray eyes","灰"],["grey eyes","灰"],["heterochromia","オッドアイ"],["オッドアイ","オッドアイ"]]],
+    ["appearance.eye_shape",[["half-lidded eyes","ジト目"],["ジト目","ジト目"],["droopy eyes","たれ目"],["たれ目","たれ目"],["upturned eyes","つり目"],["つり目","つり目"],["narrow eyes","切れ長"],["切れ長","切れ長"],["cat eyes","猫目"],["猫目","猫目"]]],
+    ["appearance.face",[["cute face","可愛い系"],["可愛い系","可愛い系"],["beautiful face","綺麗系"],["綺麗系","綺麗系"],["androgynous face","中性的"],["round face","丸顔"],["丸顔","丸顔"],["oval face","卵型"]]],
+    ["appearance.outfit_category",[["gothic","ゴシック"],["ゴシック","ゴシック"],["lolita","ロリータ"],["ロリータ","ロリータ"],["school uniform","学生服"],["制服","学生服"],["kimono","和装"],["着物","和装"],["military uniform","軍服"],["軍服","軍服"],["cyberpunk","SF・サイバー"],["mage","魔法使い"],["wizard","魔法使い"],["knight","騎士・戦士"]]]
+  ];
+  simpleMaps.forEach(([p,arr])=>{const hit=contains(arr);if(hit&&!hasMeaningful(getPath(c,p)))add(p,hit[1],.82,`語句「${hit[0]}」`)});
+  // Age inference
+  const ageNum=text.match(/(?:age|aged|年齢)?\s*(\d{1,2})\s*(?:歳|years? old)?/i);
+  if(ageNum){
+    const n=Number(ageNum[1]);let af=n<=12?"小学生程度":n<=14?"ローティーン":n<=16?"ミドルティーン":n<=19?"ハイティーン":n<=24?"20代前半":n<=29?"20代後半":n<=39?"30代":"40代以上";
+    add("appearance.age_feel",af,.75,`年齢表現 ${n}`,);
+  }else{
+    const ages=[["middle teen","ミドルティーン"],["mid teen","ミドルティーン"],["ミドルティーン","ミドルティーン"],["high teen","ハイティーン"],["ハイティーン","ハイティーン"],["teenage","ハイティーン"],["teen girl","ハイティーン"],["young adult","20代前半"]];
+    const hit=contains(ages);if(hit)add("appearance.age_feel",hit[1],.68,`年齢語「${hit[0]}」`);
+  }
+  // Explicit Japanese "名前はX"
+  const nm=text.match(/(?:名前|名)は[「『]?([^\s、。,.」』]{1,30})/);if(nm&&!hasMeaningful(c.name))add("name",nm[1],.85,"自然文の名前表現");
+
+  return {candidate:c,meta:m,unmapped:compact?[]:unmapped};
+}
+
+function parsePromptToBoth(text){
+  const char=parseCharacterText(text,true);
+  const p={},pm={};
+  const f={subject:[],hair:[],face:[],outfit:[],pose:[],camera:[],background:[],light:[],style:[],extra:[],negative:[]};
+  const lower=text.toLowerCase();
+  const addP=(cat,en,status="inferred",conf=.8,source="prompt token")=>{
+    if(!f[cat].includes(en))f[cat].push(en);
+    pm[cat]={status,confidence:Math.max(pm[cat]?.confidence||0,conf),source};
+  };
+  [["1girl","subject","1girl"],["1woman","subject","1woman"],["1boy","subject","1boy"],["1man","subject","1man"]].forEach(([tok,cat,en])=>{if(lower.includes(tok))addP(cat,en,"confirmed",.98,tok)});
+  allVocab().sort((a,b)=>b[2].length-a[2].length).forEach(([cat,j,en])=>{
+    if(f[cat]&&(lower.includes(en.toLowerCase())||text.includes(j)))addP(cat,en,"confirmed",.94,text.includes(j)?j:en);
+  });
+  rules.forEach(([j,cat,en])=>{if(text.includes(j)&&f[cat])addP(cat,en,"inferred",.8,j)});
+  // common prompt-only tokens
+  [["night","background","night"],["sunset","light","sunset"],["golden hour","light","golden hour"],["rain","background","rainy scene"],["standing","pose","standing"],["sitting","pose","sitting"],["looking back","pose","looking back"],["full body","camera","full body"],["close-up","camera","close-up portrait"],["masterpiece","style","masterpiece"],["cinematic","style","cinematic"],["detailed","style","highly detailed"]].forEach(([tok,cat,en])=>{if(lower.includes(tok))addP(cat,en,"confirmed",.9,tok)});
+  // Keep unknown residue as extra only if short enough
+  Object.keys(f).forEach(k=>{if(f[k].length)p[k]=uniqueComma(f[k].join(", "))});
+  return {charCandidate:char.candidate,charMeta:char.meta,promptCandidate:p,promptMeta:pm,unmapped:[]};
+}
+function detectType(text,obj,requested){
+  if(requested!=="auto")return requested;
+  if(obj){
+    if(obj.schema==="OCPS-BACKUP-2"||obj.schema==="OCPS-BACKUP-1"||Array.isArray(obj.characters))return"ocps";
+    if(isOCPS(obj))return"ocps";
+    return"json";
+  }
+  if(/Lorebook Entry|^Key:\s|Category:\s*character/im.test(text))return"lore";
+  if(/(?:1girl|1boy|1woman|1man|--ar\s+\d|masterpiece|negative prompt|bad hands|hime cut|full body)/i.test(text))return"prompt";
+  return"text";
+}
+function chooseBackupObject(obj){
+  if(obj&&Array.isArray(obj.characters)){
+    $("imp_picker_wrap").classList.remove("hidden");
+    $("imp_character_picker").innerHTML=obj.characters.map((c,i)=>`<option value="${i}">${esc(c.name||"名称未定")} · ${esc(c.id||"IDなし")}</option>`).join("");
+    const idx=Math.min(importState.selectedBackupIndex,obj.characters.length-1);
+    $("imp_character_picker").value=String(Math.max(0,idx));
+    return obj.characters[Math.max(0,idx)];
+  }
+  $("imp_picker_wrap").classList.add("hidden");
+  return obj;
+}
+$("imp_character_picker").addEventListener("change",()=>{importState.selectedBackupIndex=Number(v("imp_character_picker"))||0;analyzeImport()});
+
+function analyzeImport(){
+  const text=v("imp_source");if(!text){toast("読み込む内容を入力してください");return}
+  let obj=parseJSONMaybe(text);
+  let detected=detectType(text,obj,v("imp_type"));
+  importState={type:detected,charCandidate:{},charMeta:{},promptCandidate:{},promptMeta:{},unmapped:[],rawObject:obj,selectedBackupIndex:importState.selectedBackupIndex||0};
+  if(detected==="ocps"){
+    const chosen=chooseBackupObject(obj);
+    if(chosen){
+      const markAI=!!chosen._completion_by_ai;
+      const r=candidateFromOCPS(chosen,markAI?"ai":"confirmed");
+      importState.charCandidate=r.candidate;importState.charMeta=r.meta;
+      if(markAI){
+        Object.keys(importState.charMeta).forEach(path=>{
+          if(!chosen.field_meta?.[path])importState.charMeta[path]={status:"ai",confidence:.9,source:"AI completed OCPS JSON"};
+        });
+      }
+      // Also derive prompt fields from character data for optional dual import.
+      const a=chosen.appearance||{};
+      importState.promptCandidate={
+        subject:join([chosen.name?`original character: ${chosen.name}`:"",a.age_feel,a.gender,a.species]),
+        hair:join([a.hair_color,a.hair_length,a.hair_style,a.bangs]),
+        face:join([a.eye_color,a.eye_shape,a.face,a.face_feature]),
+        outfit:join([a.outfit_category,a.outfit,a.palette,a.motif,a.accessory])
+      };
+      Object.keys(importState.promptCandidate).forEach(k=>{if(importState.promptCandidate[k])importState.promptMeta[k]={status:"inferred",confidence:.8,source:"character JSON"}});
+    }
+  }else if(detected==="json"&&obj){
+    $("imp_picker_wrap").classList.add("hidden");
+    const r=parseArbitraryJSON(obj);importState.charCandidate=r.candidate;importState.charMeta=r.meta;importState.unmapped=r.unmapped;
+    const strings=flattenObject(obj).filter(([,x])=>typeof x==="string").map(([,x])=>x).join(", ");
+    const pp=parsePromptToBoth(strings);importState.promptCandidate=pp.promptCandidate;importState.promptMeta=pp.promptMeta;
+  }else if(detected==="prompt"){
+    $("imp_picker_wrap").classList.add("hidden");
+    const r=parsePromptToBoth(text);Object.assign(importState,r);
+  }else{
+    $("imp_picker_wrap").classList.add("hidden");
+    const r=parseCharacterText(text);importState.charCandidate=r.candidate;importState.charMeta=r.meta;importState.unmapped=r.unmapped;
+    const pp=parsePromptToBoth(text);importState.promptCandidate=pp.promptCandidate;importState.promptMeta=pp.promptMeta;
+  }
+  renderImportPreview();
+  renderImportDiff();
+  activateSub("importer","impreview");
+  toast("解析しました");
+}
+$("imp_analyze").onclick=analyzeImport;
+$("imp_paste").onclick=async()=>{
+  try{const t=await navigator.clipboard.readText();setv("imp_source",t);toast("貼り付けました")}catch{toast("クリップボードを読み取れませんでした")}
+};
+$("imp_file").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{setv("imp_source",await f.text());toast("ファイルを読み込みました")}catch{toast("ファイルを読めませんでした")}};
+$("imp_clear").onclick=()=>{setv("imp_source","");$("imp_char_preview").innerHTML="";$("imp_prompt_preview").innerHTML="";$("imp_diff").innerHTML="";$("imp_detected").textContent="未解析";$("imp_summary").innerHTML="";$("imp_picker_wrap").classList.add("hidden");importState={type:"",charCandidate:{},charMeta:{},promptCandidate:{},promptMeta:{},unmapped:[],rawObject:null,selectedBackupIndex:0};toast("クリアしました")};
+
+function renderImportPreview(){
+  const typeNames={ocps:"OCPS JSON",json:"任意JSON",prompt:"画像Prompt",text:"設定文・自然文",lore:"Lorebook"};
+  $("imp_detected").textContent=typeNames[importState.type]||importState.type;
+  const paths=FIELD_DEFS.map(x=>x[0]).filter(p=>hasMeaningful(getPath(importState.charCandidate,p)));
+  const pc=PROMPT_FIELD_DEFS.filter(([k])=>hasMeaningful(importState.promptCandidate[k]));
+  const counts={confirmed:0,inferred:0,ai:0};paths.forEach(p=>counts[importState.charMeta[p]?.status||"inferred"]++);
+  $("imp_summary").innerHTML=`<span class="summary-chip">キャラ項目 ${paths.length}</span><span class="summary-chip">Prompt項目 ${pc.length}</span><span class="summary-chip">確認済み ${counts.confirmed}</span><span class="summary-chip">推測 ${counts.inferred}</span><span class="summary-chip">AI補完 ${counts.ai}</span>`;
+  $("imp_char_preview").innerHTML=paths.length?`<div class="import-section-title">キャラクター項目</div>`+paths.map(p=>{
+    const meta=importState.charMeta[p]||{status:"inferred",confidence:.6,source:"解析"};
+    return `<div class="import-row"><div class="import-row-head"><div><div class="import-label">${esc(FIELD_LABEL[p]||p)}</div><div class="import-path">${esc(p)}</div></div><span class="status ${meta.status}">${statusName(meta.status)} · ${Math.round((meta.confidence??.6)*100)}%</span></div><div class="import-values"><div class="import-value"><b>解析値</b><span>${esc(displayVal(getPath(importState.charCandidate,p)))}</span></div><div class="import-value"><b>根拠</b><span>${esc(meta.source||"解析")}</span></div></div></div>`;
+  }).join(""):`<div class="section-note">キャラクター項目として確定できた情報はありません。</div>`;
+  $("imp_prompt_preview").innerHTML=pc.length?`<div class="import-section-title">画像Prompt項目</div>`+pc.map(([k,label])=>{
+    const meta=importState.promptMeta[k]||{status:"inferred",confidence:.6,source:"解析"};
+    return `<div class="import-row"><div class="import-row-head"><div><div class="import-label">${esc(label)}</div><div class="import-path">prompt.${k}</div></div><span class="status ${meta.status}">${statusName(meta.status)} · ${Math.round((meta.confidence??.6)*100)}%</span></div><div class="import-value" style="margin-top:8px"><span>${esc(displayVal(importState.promptCandidate[k]))}</span></div></div>`;
+  }).join(""):"";
+  if(importState.unmapped.length){$("imp_unmapped_wrap").classList.remove("hidden");$("imp_unmapped").textContent=importState.unmapped.slice(0,30).join("\n")}
+  else $("imp_unmapped_wrap").classList.add("hidden");
+}
+function defaultChecked(path,current,incoming,merge){
+  const conflict=hasMeaningful(current)&&!sameVal(current,incoming);
+  if(merge==="blank"||merge==="current")return !hasMeaningful(current);
+  if(merge==="incoming"||merge==="replace")return true;
+  if(merge==="review")return !conflict;
+  return false;
+}
+function renderImportDiff(){
+  const cur=characterData(),merge=v("imp_merge")||"review";
+  const paths=FIELD_DEFS.map(x=>x[0]).filter(p=>hasMeaningful(getPath(importState.charCandidate,p)));
+  const charRows=paths.map(p=>{
+    const old=getPath(cur,p),nu=getPath(importState.charCandidate,p),meta=importState.charMeta[p]||{status:"inferred",confidence:.6,source:"解析"};
+    const conflict=hasMeaningful(old)&&!sameVal(old,nu);
+    const checked=defaultChecked(p,old,nu,merge);
+    return `<div class="import-row" data-import-path="${esc(p)}">
+      <div class="import-row-head"><div><div class="import-label">${esc(FIELD_LABEL[p]||p)}</div><div class="import-path">${esc(p)}</div></div>
+      <div class="row"><span class="status ${meta.status}">${statusName(meta.status)}</span>${conflict?'<span class="status conflict">競合</span>':""}</div></div>
+      <div class="import-values"><div class="import-value"><b>現在</b><span>${esc(displayVal(old))}</span></div><div class="import-value"><b>読込</b><span>${esc(displayVal(nu))}</span></div></div>
+      <div class="import-select"><input type="checkbox" class="imp-char-check" data-path="${esc(p)}" ${checked?"checked":""}><label>読込値を反映</label></div>
+    </div>`;
+  }).join("");
+  const promptRows=PROMPT_FIELD_DEFS.filter(([k])=>hasMeaningful(importState.promptCandidate[k])).map(([k,label])=>{
+    const old=v("p_"+k),nu=importState.promptCandidate[k],conflict=hasMeaningful(old)&&old!==nu;
+    const checked=merge==="incoming"||merge==="replace"||!conflict;
+    return `<div class="import-row" data-prompt-path="${k}">
+      <div class="import-row-head"><div><div class="import-label">画像Prompt：${esc(label)}</div><div class="import-path">prompt.${k}</div></div>${conflict?'<span class="status conflict">競合</span>':""}</div>
+      <div class="import-values"><div class="import-value"><b>現在</b><span>${esc(displayVal(old))}</span></div><div class="import-value"><b>読込</b><span>${esc(displayVal(nu))}</span></div></div>
+      <div class="import-select"><input type="checkbox" class="imp-prompt-check" data-pkey="${k}" ${checked?"checked":""}><label>読込値を反映</label></div>
+    </div>`;
+  }).join("");
+  $("imp_diff").innerHTML=(charRows?`<div class="import-section-title">キャラクター差分</div>${charRows}`:"")+(promptRows?`<div class="import-section-title">画像Prompt差分</div>${promptRows}`:"")||`<div class="section-note">先にデータを解析してください。</div>`;
+}
+$("imp_merge").addEventListener("change",renderImportDiff);
+$("imp_destination").addEventListener("change",renderImportDiff);
+$("imp_select_all").onclick=()=>$$("#imp_diff input[type=checkbox]").forEach(x=>x.checked=true);
+$("imp_select_none").onclick=()=>$$("#imp_diff input[type=checkbox]").forEach(x=>x.checked=false);
+$("imp_select_additions").onclick=()=>{
+  const cur=characterData();
+  $$(".imp-char-check").forEach(x=>x.checked=!hasMeaningful(getPath(cur,x.dataset.path)));
+  $$(".imp-prompt-check").forEach(x=>x.checked=!hasMeaningful(v("p_"+x.dataset.pkey)));
+};
+
+function blankCharacter(){
+  return {
+    schema:"OCPS-CHAR-2",id:uid(),name:"",alias:"",project:"",role:"",world:"",concept:"",tags:[],
+    appearance:{age_feel:"",gender:"",species:"",height:"",body:"",skin:"",hair_color:"",hair_length:"",hair_style:"",bangs:"",eye_color:"",eye_shape:"",face:"",face_feature:"",outfit_category:"",outfit:"",palette:"",motif:"",accessory:""},
+    matrices:{visual:{x:50,y:50},social:{x:50,y:50},tone:{x:50,y:50}},
+    likert:Object.fromEntries(likerts.map(([k])=>[k,4])),
+    personality_notes:"",first_person:"",speech:"",backstory:"",occupation:"",ability:"",goal:"",values:"",conflict:"",likes:"",dislikes:"",relations:[],
+    ai_decide:[],ai_policy:"balanced",fixed:"",field_meta:{}
+  };
+}
+$("imp_apply").onclick=()=>{
+  if(!Object.keys(importState.charMeta).length&&!Object.keys(importState.promptCandidate).length){toast("先に解析してください");return}
+  const target=v("imp_target"),dest=v("imp_destination"),merge=v("imp_merge");
+  const wantsChar=target==="character"||target==="both"||target==="auto"&&Object.keys(importState.charMeta).length>0;
+  const wantsPrompt=target==="prompt"||target==="both"||target==="auto"&&Object.keys(importState.promptCandidate).length>0;
+
+  if(wantsChar){
+    let base=(dest==="new"||merge==="replace")?blankCharacter():characterData();
+    const selected=$$(".imp-char-check:checked").map(x=>x.dataset.path);
+    selected.forEach(path=>{
+      const nu=getPath(importState.charCandidate,path);
+      setPath(base,path,nu);
+      const meta=importState.charMeta[path]||{status:"inferred",confidence:.6,source:"import"};
+      base.field_meta=base.field_meta||{};
+      base.field_meta[path]={...meta,imported_at:new Date().toISOString()};
+    });
+    if(!hasMeaningful(base.id))base.id=uid();
+    setCharacter(base);
+  }
+  if(wantsPrompt){
+    $$(".imp-prompt-check:checked").forEach(x=>{
+      const k=x.dataset.pkey,nu=importState.promptCandidate[k];
+      if(merge==="blank"||merge==="current"){
+        if(!v("p_"+k))setv("p_"+k,nu);
+      }else setv("p_"+k,nu);
+    });
+  }
+  if(wantsChar&&dest==="new")toast("新規キャラクターへ読み込みました");
+  else toast("選択項目を反映しました");
+  if(wantsChar){activateMain("character");activateSub("character","basic")}
+  else if(wantsPrompt){activateMain("prompt");activateSub("prompt","pcharacter")}
+};
+
+/* manual edits become confirmed provenance */
+const FORM_PATHS={
+c_id:"id",c_name:"name",c_alias:"alias",c_project:"project",c_role:"role",c_world:"world",c_concept:"concept",c_tags:"tags",
+c_agefeel:"appearance.age_feel",c_gender:"appearance.gender",c_height:"appearance.height",c_body:"appearance.body",c_species:"appearance.species",c_skin:"appearance.skin",
+c_hair_color:"appearance.hair_color",c_hair_length:"appearance.hair_length",c_hair_style:"appearance.hair_style",c_bangs:"appearance.bangs",
+c_eye_color:"appearance.eye_color",c_eye_shape:"appearance.eye_shape",c_face:"appearance.face",c_face_feature:"appearance.face_feature",c_outfit_cat:"appearance.outfit_category",
+c_outfit:"appearance.outfit",c_palette:"appearance.palette",c_motif:"appearance.motif",c_accessory:"appearance.accessory",
+c_personality_notes:"personality_notes",c_firstperson:"first_person",c_speech:"speech",c_backstory:"backstory",c_occupation:"occupation",c_ability:"ability",
+c_goal:"goal",c_values:"values",c_conflict:"conflict",c_likes:"likes",c_dislikes:"dislikes",c_relations:"relations",c_fixed:"fixed",c_ai_policy:"ai_policy",
+m_visual_x:"matrices.visual.x",m_visual_y:"matrices.visual.y",m_social_x:"matrices.social.x",m_social_y:"matrices.social.y",m_tone_x:"matrices.tone.x",m_tone_y:"matrices.tone.y"
+};
+Object.entries(FORM_PATHS).forEach(([id,path])=>{
+  const el=$(id);if(!el)return;
+  ["change","input"].forEach(ev=>el.addEventListener(ev,()=>{
+    fieldMetaState[path]={status:"confirmed",confidence:1,source:"manual",updated_at:new Date().toISOString()};
+  }));
+});
+likerts.forEach(([k])=>{
+  const box=$(`lk_${k}`)?.closest(".likert-item");
+  box?.addEventListener("click",()=>{fieldMetaState[`likert.${k}`]={status:"confirmed",confidence:1,source:"manual",updated_at:new Date().toISOString()}});
+});
+
 
 if(!v("c_id"))setv("c_id",uid());
 initCustomSelects();initLikert();initMatrices();initAIChoices();renderSaved();renderLib();
