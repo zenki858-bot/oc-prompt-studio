@@ -1,301 +1,1008 @@
 <!doctype html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#111827">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="OC Prompt Studio">
-  <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="stylesheet" href="./styles.css">
-  <title>OC Prompt Studio</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#101625">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="OC Studio">
+<title>OC Prompt Studio v0.2</title>
+<style>
+:root{
+  --bg:#0b1020; --surface:#121a2b; --surface2:#182237; --surface3:#202d46;
+  --line:#31415f; --text:#f5f7ff; --muted:#aebbd0; --soft:#dbe5f7;
+  --accent:#8fb7ff; --accent2:#bda4ff; --good:#8ee6bd; --warn:#ffd28a; --bad:#ff9fa8;
+  --shadow:0 12px 34px rgba(0,0,0,.28);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI","Yu Gothic",system-ui,sans-serif}
+body{margin:0;min-height:100vh;background:linear-gradient(180deg,#0b1020,#0e1423 44%,#0b1020);padding-bottom:calc(92px + env(safe-area-inset-bottom))}
+button,input,select,textarea{font-family:inherit}
+button{min-height:44px;border:1px solid var(--line);border-radius:13px;background:var(--surface2);color:var(--text);font-size:15px;font-weight:750;padding:10px 13px}
+button:active{transform:translateY(1px)}
+button.primary{border-color:transparent;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0a1020}
+button.secondary{background:#1d2941}
+button.danger{color:var(--bad)}
+button.selected,.pill.selected{background:var(--accent);border-color:var(--accent);color:#08111f}
+.app{max-width:760px;margin:0 auto}
+header{padding:calc(14px + env(safe-area-inset-top)) 16px 12px;background:linear-gradient(180deg,rgba(11,16,32,.98),rgba(11,16,32,.9))}
+.brandline{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand h1{font-size:21px;margin:0 0 3px;letter-spacing:-.02em}
+.brand p{font-size:12px;color:var(--muted);margin:0}
+.version{font-size:11px;color:var(--accent);font-weight:800;border:1px solid var(--line);padding:5px 8px;border-radius:999px}
+.topnav{position:sticky;top:0;z-index:50;display:flex;gap:7px;overflow:auto;padding:8px 10px;background:rgba(11,16,32,.94);backdrop-filter:blur(18px);border-block:1px solid rgba(255,255,255,.06);scrollbar-width:none}
+.topnav::-webkit-scrollbar,.subnav::-webkit-scrollbar{display:none}
+.topnav button{flex:0 0 auto;min-width:92px;background:transparent}
+.topnav button.active{background:var(--text);color:#09101f;border-color:var(--text)}
+main{padding:12px}
+.mainpanel{display:none}.mainpanel.active{display:block}
+.hero{background:linear-gradient(135deg,rgba(143,183,255,.13),rgba(189,164,255,.09));border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:12px}
+.hero h2{font-size:18px;margin:0 0 6px}
+.hero p{font-size:13px;line-height:1.6;color:var(--muted);margin:0}
+.subnav{display:flex;gap:7px;overflow:auto;margin:0 -2px 12px;padding:2px;scrollbar-width:none}
+.subnav button{flex:0 0 auto;min-height:39px;padding:8px 12px;border-radius:999px;background:var(--surface)}
+.subnav button.active{background:var(--accent);border-color:var(--accent);color:#09111f}
+.subpanel{display:none}.subpanel.active{display:block}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px;margin:0 0 12px;box-shadow:var(--shadow)}
+.card-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.card-title h3{font-size:16px;margin:0}
+.badge{font-size:11px;font-weight:800;color:var(--accent);background:#19233a;border:1px solid var(--line);border-radius:999px;padding:5px 8px}
+.section-note{background:#10192a;border-left:3px solid var(--accent);border-radius:10px;padding:10px 11px;color:var(--muted);font-size:13px;line-height:1.6;margin:0 0 12px}
+.field{margin:0 0 14px}
+.field:last-child{margin-bottom:0}
+.field-head{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-bottom:7px}
+.field-title{font-size:14px;font-weight:800;color:var(--soft)}
+.field-tag{font-size:10px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:3px 7px}
+.field-help{font-size:12px;color:var(--muted);line-height:1.45;margin:6px 2px 0}
+input,select,textarea{
+  width:100%;min-height:46px;border:1px solid var(--line);border-radius:12px;
+  background:#0c1424;color:var(--text);padding:11px 12px;outline:none;
+  font-size:16px; /* iPhone Safariの入力時自動ズームを防ぐ */
+}
+textarea{resize:vertical;line-height:1.55;min-height:92px}
+input::placeholder,textarea::placeholder{color:#7788a3;opacity:1}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(143,183,255,.13)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.stack{display:grid;gap:10px}
+.row{display:flex;align-items:center;gap:8px}.row>*{min-width:0}.grow{flex:1}
+.custom-input{display:none;margin-top:7px}.custom-input.show{display:block}
+.divider{height:1px;background:var(--line);margin:14px 0}
+.choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.checkcard{position:relative}
+.checkcard input{position:absolute;opacity:0;pointer-events:none}
+.checkcard label{display:flex;gap:9px;align-items:center;min-height:48px;padding:10px;border:1px solid var(--line);border-radius:13px;background:#0e1728;font-size:13px;font-weight:700}
+.checkcard .mark{width:20px;height:20px;border:1px solid #586a89;border-radius:6px;display:grid;place-items:center;flex:0 0 auto}
+.checkcard input:checked+label{border-color:var(--accent);background:rgba(143,183,255,.12)}
+.checkcard input:checked+label .mark{background:var(--accent);border-color:var(--accent);color:#08111f}
+.checkcard input:checked+label .mark::after{content:"✓";font-weight:900}
+.matrix-card{border:1px solid var(--line);background:#0e1728;border-radius:16px;padding:12px;margin-bottom:12px}
+.matrix-card:last-child{margin-bottom:0}
+.matrix-title{font-size:14px;font-weight:850;margin:0 0 8px}
+.matrix-help{font-size:12px;color:var(--muted);line-height:1.45;margin:0 0 10px}
+.matrix{
+  position:relative;height:260px;border:1px solid #415273;border-radius:14px;overflow:hidden;
+  background:
+    linear-gradient(90deg,transparent 49.7%,rgba(255,255,255,.18) 50%,transparent 50.3%),
+    linear-gradient(0deg,transparent 49.7%,rgba(255,255,255,.18) 50%,transparent 50.3%),
+    linear-gradient(135deg,rgba(189,164,255,.16),rgba(143,183,255,.10));
+  touch-action:none;
+}
+.matrix-label{position:absolute;z-index:2;font-size:11px;font-weight:800;color:#e6edff;background:rgba(8,14,26,.78);padding:4px 7px;border-radius:999px;pointer-events:none}
+.ml-top{top:7px;left:50%;transform:translateX(-50%)}.ml-bottom{bottom:7px;left:50%;transform:translateX(-50%)}
+.ml-left{left:7px;top:50%;transform:translateY(-50%)}.ml-right{right:7px;top:50%;transform:translateY(-50%)}
+.crosshair{position:absolute;width:24px;height:24px;border-radius:50%;background:var(--accent);border:3px solid white;box-shadow:0 4px 12px rgba(0,0,0,.45);left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none}
+.axis-control{margin-top:10px}
+.axis-line{display:grid;grid-template-columns:70px 1fr 70px;align-items:center;gap:7px;font-size:11px;color:var(--muted)}
+.axis-line span:last-child{text-align:right}
+input[type="range"]{padding:0;min-height:34px;background:transparent;border:none;box-shadow:none}
+.matrix-values{display:flex;justify-content:space-between;gap:8px;margin-top:6px;font-size:11px;color:var(--muted)}
+.matrix-values b{color:var(--text)}
+.likert-list{display:grid;gap:10px}
+.likert-item{border:1px solid var(--line);background:#0e1728;border-radius:15px;padding:11px}
+.likert-top{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:8px}
+.likert-name{font-size:14px;font-weight:850}.likert-value{font-size:12px;color:var(--accent);font-weight:850}
+.scale{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.scale button{padding:0;min-height:38px;font-size:13px;border-radius:10px;background:#15213a}
+.scale button.selected{background:var(--accent);color:#08111f;border-color:var(--accent)}
+.scale-labels{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:11px;margin-top:7px}
+.toolbar{position:sticky;bottom:calc(8px + env(safe-area-inset-bottom));z-index:40;display:flex;gap:7px;overflow:auto;padding:8px;background:rgba(11,16,32,.94);border:1px solid var(--line);border-radius:16px;backdrop-filter:blur(16px);box-shadow:var(--shadow);scrollbar-width:none}
+.toolbar button{flex:0 0 auto}
+.outputbox{margin-top:12px}.outputbox textarea{min-height:260px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px}
+.pills{display:flex;gap:7px;flex-wrap:wrap}
+.pill{min-height:37px;padding:7px 10px;border-radius:999px;font-size:12px}
+.library-results{display:grid;gap:9px}
+.libgroup{border:1px solid var(--line);border-radius:15px;background:#0e1728;padding:11px}
+.libgroup h4{margin:0 0 9px;font-size:13px;text-transform:none}
+.wordchips{display:flex;gap:6px;flex-wrap:wrap}
+.wordchip{min-height:36px;padding:6px 9px;font-size:12px;border-radius:999px;background:#17233a}
+.wordchip small{display:block;color:#98a8c1;font-size:9px;font-weight:500;margin-top:1px}
+.saved-list{display:grid;gap:9px}
+.saved{border:1px solid var(--line);border-radius:15px;background:#0e1728;padding:11px}
+.saved h4{margin:0 0 3px;font-size:15px}.saved p{margin:4px 0;color:var(--muted);font-size:12px;line-height:1.45}
+.mini-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}.mini-actions button{min-height:37px;padding:7px 10px;font-size:12px}
+.notice{border:1px solid rgba(255,210,138,.35);background:rgba(255,210,138,.08);border-radius:14px;padding:11px;color:#f2d9ae;font-size:12px;line-height:1.55}
+.hidden{display:none!important}
+.toast{position:fixed;z-index:100;left:50%;bottom:calc(22px + env(safe-area-inset-bottom));transform:translate(-50%,20px);opacity:0;background:#f4f7ff;color:#09101f;padding:10px 14px;border-radius:999px;font-size:13px;font-weight:850;transition:.18s;pointer-events:none}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(max-width:560px){
+  main{padding:10px}
+  .grid2{grid-template-columns:1fr}
+  .matrix{height:245px}
+  .choice-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:390px){
+  .choice-grid{grid-template-columns:1fr}
+  .matrix{height:225px}
+}
+</style>
 </head>
 <body>
-<header class="app-header">
-  <div>
-    <div class="eyebrow">iPhone / PWA prototype</div>
-    <h1>OC Prompt Studio</h1>
-    <p>キャラクター設計 × 画像生成プロンプト設計</p>
+<div class="app">
+<header>
+  <div class="brandline">
+    <div class="brand">
+      <h1>OC Prompt Studio</h1>
+      <p>キャラクター設計と画像生成プロンプトを、iPhoneで整理・出力</p>
+    </div>
+    <span class="version">v0.2</span>
   </div>
-  <button id="installHintBtn" class="ghost">iPhoneへ追加</button>
 </header>
 
-<nav class="tabs" aria-label="Main tabs">
-  <button class="tab active" data-tab="character">キャラ設計</button>
-  <button class="tab" data-tab="prompt">プロンプト</button>
-  <button class="tab" data-tab="library">語彙ライブラリ</button>
-  <button class="tab" data-tab="data">保存/読込</button>
+<nav class="topnav" id="topnav">
+  <button class="active" data-main="character">キャラ作成</button>
+  <button data-main="prompt">プロンプト</button>
+  <button data-main="library">語彙辞書</button>
+  <button data-main="storage">保存・出力</button>
 </nav>
 
 <main>
-<section id="character" class="panel active">
-  <div class="section-title">
-    <div><span class="step">01</span><h2>基本情報</h2></div>
-    <button id="newCharacterBtn" class="ghost danger">新規化</button>
+<section id="character" class="mainpanel active">
+  <div class="hero">
+    <h2>キャラクター設計</h2>
+    <p>関連項目ごとに分けて入力します。決めたくない項目は空欄または「お任せ」にでき、最後にAIへ渡すデータへまとめます。</p>
   </div>
 
-  <div class="grid two">
-    <label>名前
-      <input id="c_name" placeholder="例：リネット">
-    </label>
-    <label>固有ID
-      <div class="row compact">
-        <input id="c_id" readonly>
-        <button id="regenIdBtn" class="ghost">再発行</button>
-      </div>
-    </label>
-    <label>読み / 別名
-      <input id="c_alias" placeholder="例：Lynette / リン">
-    </label>
-    <label>作品・企画
-      <input id="c_project" placeholder="例：紅蜜の迷宮">
-    </label>
-    <label>役割
-      <select id="c_role">
-        <option value="お任せ">お任せ</option>
-        <option>主人公</option><option>ヒロイン</option><option>仲間</option>
-        <option>ライバル</option><option>敵対者</option><option>案内役</option>
-        <option>モブ寄り主要人物</option><option>その他</option>
-      </select>
-    </label>
-    <label>舞台 / 世界観
-      <input id="c_world" placeholder="例：中世欧風ファンタジー">
-    </label>
-  </div>
+  <nav class="subnav" data-subnav="character">
+    <button class="active" data-sub="basic">基本</button>
+    <button data-sub="appearance">容姿</button>
+    <button data-sub="direction">方向性</button>
+    <button data-sub="personality">性格</button>
+    <button data-sub="setting">設定</button>
+    <button data-sub="ai">AI裁量</button>
+    <button data-sub="charout">確認・出力</button>
+  </nav>
 
-  <label>一文コンセプト
-    <textarea id="c_concept" rows="3" placeholder="曖昧でOK。例：見た目は可愛いが、好奇心が強すぎて危険に首を突っ込む駆け出し魔法使い"></textarea>
-  </label>
-
-  <div class="section-title"><div><span class="step">02</span><h2>方向性マトリクス</h2></div></div>
-  <p class="help">四角の好きな位置をタップ。数値も保存されるため、AIに「どちら寄りか」を伝えやすくなります。</p>
-  <div class="matrix-grid">
-    <div class="matrix-card">
-      <h3>外見印象</h3>
-      <div class="matrix" data-x="c_visual_x" data-y="c_visual_y">
-        <span class="label top">華やか</span><span class="label bottom">素朴</span>
-        <span class="label left">可愛い</span><span class="label right">格好いい</span>
-        <div class="dot"></div>
+  <div id="basic" class="subpanel active" data-parent="character">
+    <div class="card">
+      <div class="card-title"><h3>識別情報</h3><span class="badge">必須ではありません</span></div>
+      <div class="field">
+        <div class="field-head"><span class="field-title">名前</span><span class="field-tag">自由入力</span></div>
+        <input id="c_name" placeholder="例：山田花子 / John Smith / Mary Sue">
+        <p class="field-help">まだ決めない場合は空欄のままでも構いません。</p>
       </div>
-      <div class="matrix-values"><span>可愛い↔格好いい: <b id="c_visual_x_v">50</b></span><span>素朴↔華やか: <b id="c_visual_y_v">50</b></span></div>
-      <input id="c_visual_x" type="hidden" value="50"><input id="c_visual_y" type="hidden" value="50">
+      <div class="grid2">
+        <div class="field">
+          <div class="field-head"><span class="field-title">読み・別名</span></div>
+          <input id="c_alias" placeholder="例：やまだ はなこ / ハナ">
+        </div>
+        <div class="field">
+          <div class="field-head"><span class="field-title">固有ID</span></div>
+          <div class="row"><input id="c_id" class="grow" readonly><button id="regenId">再発行</button></div>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <div class="field-head"><span class="field-title">作品・企画名</span></div>
+          <input id="c_project" placeholder="例：オリジナル小説A">
+        </div>
+        <div class="field">
+          <div class="field-head"><span class="field-title">役割</span><span class="field-tag">選択</span></div>
+          <select id="c_role">
+            <option value="">未指定</option><option>お任せ</option><option>主人公</option><option>ヒロイン</option>
+            <option>主要人物</option><option>仲間</option><option>ライバル</option><option>敵対者</option><option>案内役</option><option>脇役</option><option value="__custom">自由入力…</option>
+          </select>
+          <input id="c_role_custom" class="custom-input" placeholder="役割を自由入力">
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-head"><span class="field-title">舞台・世界観</span></div>
+        <input id="c_world" placeholder="例：現代日本 / 中世風ファンタジー / 宇宙開拓時代">
+      </div>
+      <div class="field">
+        <div class="field-head"><span class="field-title">一文コンセプト</span><span class="field-tag">重要</span></div>
+        <textarea id="c_concept" placeholder="例：普段は穏やかだが、未知のものを見ると危険を忘れて追いかけてしまう新人研究者。"></textarea>
+        <p class="field-help">細部より先に「このキャラを一言で言うと？」を置くと、AIが方向性を保ちやすくなります。</p>
+      </div>
+      <div class="field">
+        <div class="field-head"><span class="field-title">検索タグ</span></div>
+        <input id="c_tags" placeholder="#OC #fantasy #student #project_A">
+        <p class="field-help">Appleメモ検索用。空白区切りで複数指定できます。</p>
+      </div>
     </div>
-    <div class="matrix-card">
-      <h3>対人傾向</h3>
-      <div class="matrix" data-x="c_social_x" data-y="c_social_y">
-        <span class="label top">能動的</span><span class="label bottom">受動的</span>
-        <span class="label left">内向的</span><span class="label right">外向的</span>
-        <div class="dot"></div>
+  </div>
+
+  <div id="appearance" class="subpanel" data-parent="character">
+    <div class="card">
+      <div class="card-title"><h3>身体・年齢</h3><span class="badge">選択＋自由入力</span></div>
+      <div class="grid2">
+        <div class="field">
+          <div class="field-head"><span class="field-title">年齢感</span></div>
+          <select id="c_agefeel">
+            <option value="">未指定</option><option>お任せ</option><option>幼児</option><option>小学生程度</option><option>ローティーン</option><option>ミドルティーン</option><option>ハイティーン</option><option>20代前半</option><option>20代後半</option><option>30代</option><option>40代以上</option><option>年齢不詳</option><option value="__custom">自由入力…</option>
+          </select><input id="c_agefeel_custom" class="custom-input" placeholder="例：17〜19歳程度">
+        </div>
+        <div class="field">
+          <div class="field-head"><span class="field-title">性別・ジェンダー表現</span></div>
+          <select id="c_gender">
+            <option value="">未指定</option><option>お任せ</option><option>女性</option><option>男性</option><option>中性的</option><option>両性的</option><option>無性別的</option><option value="__custom">自由入力…</option>
+          </select><input id="c_gender_custom" class="custom-input" placeholder="自由入力">
+        </div>
+        <div class="field">
+          <div class="field-head"><span class="field-title">身長感</span></div>
+          <select id="c_height">
+            <option value="">未指定</option><option>お任せ</option><option>かなり低い</option><option>低め</option><option>平均的</option><option>高め</option><option>かなり高い</option><option value="__custom">自由入力…</option>
+          </select><input id="c_height_custom" class="custom-input" placeholder="例：160cm前後">
+        </div>
+        <div class="field">
+          <div class="field-head"><span class="field-title">体型</span></div>
+          <select id="c_body">
+            <option value="">未指定</option><option>お任せ</option><option>華奢</option><option>細身</option><option>標準</option><option>健康的</option><option>柔らかな体つき</option><option>筋肉質</option><option>グラマー</option><option>がっしり</option><option value="__custom">自由入力…</option>
+          </select><input id="c_body_custom" class="custom-input" placeholder="体型を自由入力">
+        </div>
+        <div class="field">
+          <div class="field-head"><span class="field-title">種族</span></div>
+          <select id="c_species">
+            <option value="">未指定</option><option>人間</option><option>エルフ</option><option>獣人</option><option>悪魔</option><option>天使</option><option>妖精</option><option>人造生命</option><option>機械生命</option><option>お任せ</option><option value="__custom">自由入力…</option>
+          </select><input id="c_species_custom" class="custom-input" placeholder="種族を自由入力">
+        </div>
+        <div class="field">
+          <div class="field-head"><span class="field-title">肌</span></div>
+          <select id="c_skin">
+            <option value="">未指定</option><option>お任せ</option><option>非常に明るい肌</option><option>明るい肌</option><option>標準的な肌色</option><option>健康的に日焼け</option><option>褐色</option><option>濃い褐色</option><option value="__custom">自由入力…</option>
+          </select><input id="c_skin_custom" class="custom-input" placeholder="肌の特徴を自由入力">
+        </div>
       </div>
-      <div class="matrix-values"><span>内向↔外向: <b id="c_social_x_v">50</b></span><span>受動↔能動: <b id="c_social_y_v">50</b></span></div>
-      <input id="c_social_x" type="hidden" value="50"><input id="c_social_y" type="hidden" value="50">
+    </div>
+
+    <div class="card">
+      <div class="card-title"><h3>髪</h3><span class="badge">実プルダウン</span></div>
+      <div class="grid2">
+        <div class="field">
+          <div class="field-head"><span class="field-title">髪色</span></div>
+          <select id="c_hair_color">
+            <option value="">未指定</option><option>お任せ</option><option>黒</option><option>ダークブラウン</option><option>ブラウン</option><option>赤茶</option><option>金</option><option>プラチナブロンド</option><option>白</option><option>銀</option><option>灰</option><option>赤</option><option>橙</option><option>ピンク</option><option>紫</option><option>青</option><option>水色</option><option>緑</option><option>ミント</option><option>グラデーション</option><option>ツートーン</option><option value="__custom">自由入力…</option>
+          </select><input id="c_hair_color_custom" class="custom-input" placeholder="例：青みのある黒">
+        </div>
+        <div class="field">
+          <div class="field-head"><span class="field-title">髪の長さ</span></div>
+          <select id="c_hair_length">
+            <option value="">未指定</option><option>お任せ</option><option>ベリーショート</option><option>ショート</option><option>顎まで</option><option>肩まで</option><option>ミディアム</option><option>セミロング</option><option>ロング</option><option>腰まで</option><option>膝まで</option><option>超ロング</option><option value="__custom">自由入力…</option>
+          </select><input id="c_hair_length_custom" class="custom-input" placeholder="長さを自由入力">
+        </div>
+        <div class="field">
+          <div class="field-head"><span class="field-title">髪型</span></div>
+          <select id="c_hair_style">
+            <option value="">未指定</option><option>お任せ</option><option>ストレート</option><option>ゆるいウェーブ</option><option>強いウェーブ</option><option>カール</option><option>ボブ</option><option>ショートボブ</option><option>レイヤーボブ</option><option>ウルフカット</option><option>ピクシーカット</option><option>姫カット</option><option>ポニーテール</option><option>ハイポニー</option><option>ローポニー</option><option>サイドテール</option><option>ツインテール</option><option>ローツイン</option><option>ハーフツイン</option><option>ハーフアップ</option><option>お団子</option><option>ツインお団子</option><option>三つ編み</option><option>サイドブレイド</option><option>編み込み</option><option>クラウンブレイド</option><option>フィッシュボーン</option><option>縦ロール</option><option value="__custom">自由入力…</option>
+          </select><input id="c_hair_style_custom" class="custom-input" placeholder="髪型を自由入力">
+        </div>
+        <div class="field">
+          <div class="field-head"><span class="field-title">前髪</span></div>
+          <select id="c_bangs">
+            <option value="">未指定</option><option>お任せ</option><option>ぱっつん</option><option>シースルーバング</option><option>斜め前髪</option><option>センター分け</option><option>目にかかる前髪</option><option>片目隠れ</option><option>両目隠れ</option><option>前髪なし</option><option>アホ毛あり</option><option value="__custom">自由入力…</option>
+          </select><input id="c_bangs_custom" class="custom-input" placeholder="前髪を自由入力">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><h3>顔・瞳</h3></div>
+      <div class="grid2">
+        <div class="field">
+          <div class="field-head"><span class="field-title">瞳の色</span></div>
+          <select id="c_eye_color">
+            <option value="">未指定</option><option>お任せ</option><option>黒</option><option>茶</option><option>琥珀</option><option>金</option><option>赤</option><option>桃</option><option>紫</option><option>青</option><option>水色</option><option>緑</option><option>灰</option><option>オッドアイ</option><option value="__custom">自由入力…</option>
+          </select><input id="c_eye_color_custom" class="custom-input" placeholder="瞳色を自由入力">
+        </div>
+        <div class="field">
+          <div class="field-head"><span class="field-title">目の形</span></div>
+          <select id="c_eye_shape">
+            <option value="">未指定</option><option>お任せ</option><option>大きな丸い目</option><option>たれ目</option><option>つり目</option><option>切れ長</option><option>ジト目</option><option>半目気味</option><option>猫目</option><option value="__custom">自由入力…</option>
+          </select><input id="c_eye_shape_custom" class="custom-input" placeholder="目の形を自由入力">
+        </div>
+        <div class="field">
+          <div class="field-head"><span class="field-title">顔立ち</span></div>
+          <select id="c_face">
+            <option value="">未指定</option><option>お任せ</option><option>可愛い系</option><option>綺麗系</option><option>中性的</option><option>幼い印象</option><option>大人びた印象</option><option>丸顔</option><option>卵型</option><option>シャープ</option><option value="__custom">自由入力…</option>
+          </select><input id="c_face_custom" class="custom-input" placeholder="顔立ちを自由入力">
+        </div>
+        <div class="field">
+          <div class="field-head"><span class="field-title">恒常的な特徴</span></div>
+          <input id="c_face_feature" placeholder="例：そばかす / 泣きぼくろ / 八重歯">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><h3>衣装・モチーフ</h3></div>
+      <div class="grid2">
+        <div class="field">
+          <div class="field-head"><span class="field-title">衣装カテゴリ</span></div>
+          <select id="c_outfit_cat">
+            <option value="">未指定</option><option>お任せ</option><option>現代私服</option><option>学生服</option><option>フォーマル</option><option>ゴシック</option><option>ロリータ</option><option>和装</option><option>中華風</option><option>民族衣装</option><option>ファンタジー旅装</option><option>魔法使い</option><option>騎士・戦士</option><option>聖職者</option><option>軍服</option><option>SF・サイバー</option><option>ステージ衣装</option><option value="__custom">自由入力…</option>
+          </select><input id="c_outfit_cat_custom" class="custom-input" placeholder="カテゴリを自由入力">
+        </div>
+        <div class="field">
+          <div class="field-head"><span class="field-title">具体的な衣装</span></div>
+          <input id="c_outfit" placeholder="例：白いブラウス＋紺のプリーツスカート">
+        </div>
+        <div class="field">
+          <div class="field-head"><span class="field-title">配色</span></div>
+          <input id="c_palette" placeholder="例：白・紺・金を中心に、差し色は赤">
+        </div>
+        <div class="field">
+          <div class="field-head"><span class="field-title">モチーフ</span></div>
+          <input id="c_motif" placeholder="例：月 / 鍵 / 桜 / 幾何学模様">
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-head"><span class="field-title">アクセサリー・特徴物</span></div>
+        <textarea id="c_accessory" placeholder="例：左耳だけの小さなピアス。右手に古い指輪。"></textarea>
+      </div>
     </div>
   </div>
 
-  <div class="section-title"><div><span class="step">03</span><h2>性格リッカート尺度</h2></div></div>
-  <div id="likertArea" class="likert-grid"></div>
-
-  <div class="section-title"><div><span class="step">04</span><h2>容姿・デザイン</h2></div></div>
-  <div class="grid two">
-    <label>年齢感
-      <select id="c_agefeel"><option>お任せ</option><option>幼い</option><option>ローティーン</option><option>ミドルティーン</option><option>ハイティーン</option><option>20代前半</option><option>20代後半</option><option>30代</option><option>年齢不詳</option></select>
-    </label>
-    <label>身長感
-      <select id="c_height"><option>お任せ</option><option>かなり低い</option><option>やや低い</option><option>平均的</option><option>やや高い</option><option>かなり高い</option></select>
-    </label>
-    <label>体型
-      <input id="c_body" list="bodyTypes" placeholder="お任せ / 華奢 / 標準 / グラマー ...">
-    </label>
-    <label>肌
-      <input id="c_skin" placeholder="例：明るい肌、健康的">
-    </label>
-    <label>髪色
-      <input id="c_hair_color" placeholder="例：赤みのあるダークブラウン">
-    </label>
-    <label>髪型
-      <input id="c_hair_style" list="hairStyles" placeholder="例：ハーフアップ、姫カット">
-    </label>
-    <label>瞳
-      <input id="c_eyes" placeholder="例：大きめの翡翠色、やや垂れ目">
-    </label>
-    <label>顔立ち
-      <input id="c_face" placeholder="例：可愛い系、丸み、鼻は小さめ">
-    </label>
-    <label>衣装
-      <input id="c_outfit" list="outfits" placeholder="例：軽装の旅装、ショートケープ">
-    </label>
-    <label>モチーフ
-      <input id="c_motif" placeholder="例：月、鈴、紅い蜜">
-    </label>
-    <label>配色
-      <input id="c_palette" placeholder="例：アイボリー＋深紅＋金">
-    </label>
-    <label>特徴物
-      <input id="c_accessory" placeholder="例：左耳だけのピアス、星形ヘアピン">
-    </label>
+  <div id="direction" class="subpanel" data-parent="character">
+    <div class="section-note">四角を直接タップ・ドラッグできます。さらに下の2本のスライダーでも微調整できます。どちらで操作しても同じ数値が更新されます。</div>
+    <div class="card">
+      <div class="matrix-card" data-matrix="visual">
+        <div class="matrix-title">外見の方向性</div>
+        <p class="matrix-help">横軸＝可愛い↔格好いい、縦軸＝素朴↔華やか</p>
+        <div class="matrix">
+          <span class="matrix-label ml-top">華やか</span><span class="matrix-label ml-bottom">素朴</span>
+          <span class="matrix-label ml-left">可愛い</span><span class="matrix-label ml-right">格好いい</span>
+          <div class="crosshair"></div>
+        </div>
+        <div class="axis-control">
+          <div class="axis-line"><span>可愛い</span><input id="m_visual_x" type="range" min="0" max="100" value="50"><span>格好いい</span></div>
+          <div class="axis-line"><span>素朴</span><input id="m_visual_y" type="range" min="0" max="100" value="50"><span>華やか</span></div>
+          <div class="matrix-values"><span>横 <b id="m_visual_xv">50</b>/100</span><span>縦 <b id="m_visual_yv">50</b>/100</span></div>
+        </div>
+      </div>
+      <div class="matrix-card" data-matrix="social">
+        <div class="matrix-title">対人・行動の方向性</div>
+        <p class="matrix-help">横軸＝内向的↔外向的、縦軸＝受動的↔能動的</p>
+        <div class="matrix">
+          <span class="matrix-label ml-top">能動的</span><span class="matrix-label ml-bottom">受動的</span>
+          <span class="matrix-label ml-left">内向的</span><span class="matrix-label ml-right">外向的</span>
+          <div class="crosshair"></div>
+        </div>
+        <div class="axis-control">
+          <div class="axis-line"><span>内向的</span><input id="m_social_x" type="range" min="0" max="100" value="50"><span>外向的</span></div>
+          <div class="axis-line"><span>受動的</span><input id="m_social_y" type="range" min="0" max="100" value="50"><span>能動的</span></div>
+          <div class="matrix-values"><span>横 <b id="m_social_xv">50</b>/100</span><span>縦 <b id="m_social_yv">50</b>/100</span></div>
+        </div>
+      </div>
+      <div class="matrix-card" data-matrix="tone">
+        <div class="matrix-title">物語上の印象</div>
+        <p class="matrix-help">横軸＝現実的↔幻想的、縦軸＝明るい↔ダーク</p>
+        <div class="matrix">
+          <span class="matrix-label ml-top">ダーク</span><span class="matrix-label ml-bottom">明るい</span>
+          <span class="matrix-label ml-left">現実的</span><span class="matrix-label ml-right">幻想的</span>
+          <div class="crosshair"></div>
+        </div>
+        <div class="axis-control">
+          <div class="axis-line"><span>現実的</span><input id="m_tone_x" type="range" min="0" max="100" value="50"><span>幻想的</span></div>
+          <div class="axis-line"><span>明るい</span><input id="m_tone_y" type="range" min="0" max="100" value="50"><span>ダーク</span></div>
+          <div class="matrix-values"><span>横 <b id="m_tone_xv">50</b>/100</span><span>縦 <b id="m_tone_yv">50</b>/100</span></div>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div class="section-title"><div><span class="step">05</span><h2>設定・関係性</h2></div></div>
-  <label>性格・口調の自由記述
-    <textarea id="c_personality_notes" rows="4" placeholder="例：初対面では敬語。慣れると語尾が砕ける。怖がりだが好奇心に負ける。"></textarea>
-  </label>
-  <label>背景 / 経歴
-    <textarea id="c_backstory" rows="4"></textarea>
-  </label>
-  <label>目的・欲求
-    <textarea id="c_goal" rows="3"></textarea>
-  </label>
-  <label>弱点 / 葛藤
-    <textarea id="c_conflict" rows="3"></textarea>
-  </label>
-  <label>関係性（1行1件。固有IDを含めると紐付けしやすい）
-    <textarea id="c_relations" rows="4" placeholder="CHAR-XXXX | ミカナ | 友人 / 少し警戒"></textarea>
-  </label>
-  <label>検索タグ
-    <input id="c_tags" placeholder="#OC #fantasy #magic #project_紅蜜の迷宮">
-  </label>
-
-  <div class="section-title"><div><span class="step">06</span><h2>AIに決めてほしい項目</h2></div></div>
-  <div id="autoFields" class="chipbox"></div>
-
-  <div class="actions sticky-actions">
-    <button id="saveCharacterBtn" class="primary">キャラを保存</button>
-    <button id="linkToPromptBtn">プロンプトへ反映</button>
-    <button id="exportTextBtn">AI用テキスト</button>
-    <button id="exportJsonBtn">JSON</button>
-    <button id="exportLoreBtn">Lorebook</button>
+  <div id="personality" class="subpanel" data-parent="character">
+    <div class="section-note">各項目は7段階です。4が中間。左右の説明を見ながら数字をタップしてください。</div>
+    <div class="card"><div id="likertList" class="likert-list"></div></div>
+    <div class="card">
+      <div class="card-title"><h3>性格・口調の補足</h3></div>
+      <div class="field">
+        <div class="field-head"><span class="field-title">自由記述</span></div>
+        <textarea id="c_personality_notes" placeholder="例：初対面では丁寧な敬語。親しくなると冗談が増える。失敗すると一人で抱え込みやすい。"></textarea>
+      </div>
+      <div class="grid2">
+        <div class="field"><div class="field-head"><span class="field-title">一人称</span></div><input id="c_firstperson" placeholder="例：私 / 僕 / 自分"></div>
+        <div class="field"><div class="field-head"><span class="field-title">口調・語尾</span></div><input id="c_speech" placeholder="例：丁寧、短文が多い"></div>
+      </div>
+    </div>
   </div>
 
-  <div id="exportArea" class="export-card hidden">
-    <div class="row between"><h3 id="exportTitle">出力</h3><div class="row compact"><button id="copyExportBtn">コピー</button><button id="shareExportBtn">共有</button></div></div>
-    <textarea id="exportText" rows="18"></textarea>
-  </div>
-</section>
-
-<section id="prompt" class="panel">
-  <div class="section-title"><div><span class="step">01</span><h2>曖昧な日本語から変換</h2></div></div>
-  <label>元の説明
-    <textarea id="p_source" rows="5" placeholder="例：雨の夜の古い街で、赤茶の長い髪の女の子が振り返っている。少し寂しそう。映画っぽく透明感のある絵。"></textarea>
-  </label>
-  <div class="grid two">
-    <label>出力規格
-      <select id="p_target">
-        <option value="novelai">NovelAI向け</option>
-        <option value="sdxl">Stable Diffusion / SDXL向け</option>
-        <option value="niji">NijiJourney向け</option>
-        <option value="generic">汎用自然文</option>
-      </select>
-    </label>
-    <label>変換の強さ
-      <select id="p_expand">
-        <option value="safe">原文重視</option>
-        <option value="balanced" selected>補完あり</option>
-        <option value="rich">積極的に補完</option>
-      </select>
-    </label>
-  </div>
-  <div class="actions">
-    <button id="convertPromptBtn" class="primary">自動分解・変換</button>
-    <button id="applyCharacterBtn">保存キャラから反映</button>
-    <button id="clearPromptBtn" class="ghost danger">クリア</button>
-  </div>
-  <p class="help">この試作版は端末内の辞書とルールで変換します。未解釈部分は捨てず「補足」に残します。</p>
-
-  <div class="section-title"><div><span class="step">02</span><h2>部分編集</h2></div></div>
-  <div class="prompt-sections">
-    <label>主体 / キャラクター<textarea id="p_subject" rows="3"></textarea></label>
-    <label>髪<textarea id="p_hair" rows="3"></textarea></label>
-    <label>顔・目・表情<textarea id="p_face" rows="3"></textarea></label>
-    <label>衣装・装飾<textarea id="p_outfit" rows="3"></textarea></label>
-    <label>ポーズ・動作<textarea id="p_pose" rows="3"></textarea></label>
-    <label>構図・カメラ<textarea id="p_camera" rows="3"></textarea></label>
-    <label>背景<textarea id="p_background" rows="3"></textarea></label>
-    <label>光・色・空気感<textarea id="p_light" rows="3"></textarea></label>
-    <label>画風・質感<textarea id="p_style" rows="3"></textarea></label>
-    <label>補足 / 未解釈<textarea id="p_extra" rows="3"></textarea></label>
-    <label>ネガティブ<textarea id="p_negative" rows="4"></textarea></label>
+  <div id="setting" class="subpanel" data-parent="character">
+    <div class="card">
+      <div class="card-title"><h3>経歴・現在</h3></div>
+      <div class="field"><div class="field-head"><span class="field-title">背景・経歴</span></div><textarea id="c_backstory" placeholder="出生、育った環境、過去の出来事など"></textarea></div>
+      <div class="grid2">
+        <div class="field"><div class="field-head"><span class="field-title">現在の立場・職業</span></div><input id="c_occupation" placeholder="例：高校生 / 騎士見習い / 研究員"></div>
+        <div class="field"><div class="field-head"><span class="field-title">得意・能力</span></div><input id="c_ability" placeholder="例：記憶力、治癒魔法、交渉"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><h3>内面・物語上の動機</h3></div>
+      <div class="field"><div class="field-head"><span class="field-title">目的・欲求</span></div><textarea id="c_goal" placeholder="この人物が今、何を得たい・成し遂げたいのか"></textarea></div>
+      <div class="field"><div class="field-head"><span class="field-title">価値観・信念</span></div><textarea id="c_values" placeholder="何を正しいと思うか、何を優先するか"></textarea></div>
+      <div class="field"><div class="field-head"><span class="field-title">弱点・葛藤</span></div><textarea id="c_conflict" placeholder="苦手、恐れ、矛盾、本人が認めたくない問題など"></textarea></div>
+      <div class="grid2">
+        <div class="field"><div class="field-head"><span class="field-title">好きなもの</span></div><input id="c_likes" placeholder="例：甘い紅茶、静かな場所"></div>
+        <div class="field"><div class="field-head"><span class="field-title">嫌い・苦手</span></div><input id="c_dislikes" placeholder="例：大声、閉所"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><h3>関係性</h3><span class="badge">1行1件</span></div>
+      <div class="field">
+        <div class="field-head"><span class="field-title">他キャラクターとの関係</span></div>
+        <textarea id="c_relations" placeholder="例：CHAR-AB12CD | 山田太郎 | 幼なじみ / 信頼している&#10;例：CHAR-EF34GH | John Doe | 上司 / 少し苦手"></textarea>
+        <p class="field-help">固有IDを入れておくと、Appleメモでも後から横断検索できます。</p>
+      </div>
+    </div>
   </div>
 
-  <div class="section-title"><div><span class="step">03</span><h2>規格別オプション</h2></div></div>
-  <div class="grid three">
-    <label>アスペクト比
-      <select id="p_ar"><option>2:3</option><option>3:4</option><option>1:1</option><option>4:3</option><option>16:9</option><option>9:16</option></select>
-    </label>
-    <label>Niji stylize
-      <input id="p_stylize" type="number" value="100" min="0" max="1000">
-    </label>
-    <label>SD重み記法
-      <select id="p_weight"><option value="plain">なし</option><option value="paren">重要語を括弧</option></select>
-    </label>
+  <div id="ai" class="subpanel" data-parent="character">
+    <div class="section-note">「未指定」と「AIに決めてよい」は別扱いです。ここでチェックした項目だけ、AIに積極的な創作を許可します。</div>
+    <div class="card">
+      <div class="card-title"><h3>AIに決めてよい項目</h3><button id="aiToggleAll">全選択/解除</button></div>
+      <div id="aiChoices" class="choice-grid"></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><h3>AIへの裁量ルール</h3></div>
+      <div class="field">
+        <div class="field-head"><span class="field-title">補完方針</span></div>
+        <select id="c_ai_policy">
+          <option value="conservative">保守的：指定内容を最優先し、必要最小限だけ補完</option>
+          <option value="balanced" selected>標準：指定と矛盾しない範囲で自然に補完</option>
+          <option value="creative">創造的：方向性を守りつつ積極的に提案</option>
+        </select>
+      </div>
+      <div class="field">
+        <div class="field-head"><span class="field-title">絶対に変えない条件</span></div>
+        <textarea id="c_fixed" placeholder="例：髪色は必ず黒。主人公との年齢差は2歳以内。"></textarea>
+      </div>
+    </div>
   </div>
 
-  <div class="actions sticky-actions">
-    <button id="buildPromptBtn" class="primary">最終プロンプト生成</button>
-    <button id="copyPromptBtn">コピー</button>
-    <button id="sharePromptBtn">共有</button>
-  </div>
-
-  <div class="export-card">
-    <h3>Positive / Main</h3>
-    <textarea id="p_output" rows="12"></textarea>
-    <h3>Negative</h3>
-    <textarea id="p_neg_output" rows="7"></textarea>
+  <div id="charout" class="subpanel" data-parent="character">
+    <div class="card">
+      <div class="card-title"><h3>保存・AI出力</h3></div>
+      <div class="section-note">Appleメモへ貼るなら「AI用テキスト」が最も読みやすく、機械処理や再編集にはJSONが向いています。</div>
+      <div class="pills">
+        <button class="primary" id="saveChar">キャラを保存</button>
+        <button id="outText">AI用テキスト</button>
+        <button id="outJson">JSON</button>
+        <button id="outLore">Lorebook</button>
+        <button id="sendPrompt">画像Promptへ反映</button>
+      </div>
+      <div class="outputbox">
+        <div class="field-head"><span class="field-title" id="charOutTitle">出力プレビュー</span><span class="field-tag">編集可</span></div>
+        <textarea id="charOut" placeholder="ここに出力されます"></textarea>
+        <div class="pills" style="margin-top:8px"><button id="copyCharOut">コピー</button><button id="shareCharOut">共有</button></div>
+      </div>
+    </div>
   </div>
 </section>
 
-<section id="library" class="panel">
-  <div class="section-title"><div><span class="step">01</span><h2>語彙ライブラリ</h2></div></div>
-  <label>検索
-    <input id="libSearch" placeholder="例：髪 / braid / ゴシック / 路地">
-  </label>
-  <div class="row wrap" id="libCategoryRow"></div>
-  <p class="help">チップをタップするとプロンプトの対応欄へ追加。長押し不要です。</p>
-  <div id="libraryList" class="library-list"></div>
-
-  <div class="section-title"><div><span class="step">02</span><h2>自作語彙</h2></div></div>
-  <div class="grid three">
-    <label>カテゴリ
-      <select id="customCat"><option>hair</option><option>face</option><option>outfit</option><option>pose</option><option>camera</option><option>background</option><option>light</option><option>style</option><option>negative</option></select>
-    </label>
-    <label>表示名<input id="customJa" placeholder="例：外ハネミディアム"></label>
-    <label>プロンプト語<input id="customEn" placeholder="例：medium hair with flipped-out ends"></label>
+<section id="prompt" class="mainpanel">
+  <div class="hero">
+    <h2>画像生成プロンプト</h2>
+    <p>曖昧な説明をカテゴリごとに分け、後から髪だけ・背景だけ・画風だけ変更できるようにします。</p>
   </div>
-  <button id="addCustomWordBtn" class="primary">語彙を追加</button>
+  <nav class="subnav" data-subnav="prompt">
+    <button class="active" data-sub="pstart">元の説明</button>
+    <button data-sub="pcharacter">キャラ</button>
+    <button data-sub="pscene">ポーズ・背景</button>
+    <button data-sub="pstyle">画風・光</button>
+    <button data-sub="presult">出力</button>
+  </nav>
+
+  <div id="pstart" class="subpanel active" data-parent="prompt">
+    <div class="card">
+      <div class="field">
+        <div class="field-head"><span class="field-title">曖昧な日本語の説明</span><span class="field-tag">そのままでOK</span></div>
+        <textarea id="p_source" placeholder="例：雨の夜の古い街で、赤茶色の長い髪の少女が振り返っている。少し寂しそう。映画のような雰囲気で透明感がほしい。"></textarea>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <div class="field-head"><span class="field-title">出力規格</span></div>
+          <select id="p_target">
+            <option value="nai5">NovelAI V5系</option>
+            <option value="nai45">NovelAI V4.5系</option>
+            <option value="sdxl">Stable Diffusion / SDXL</option>
+            <option value="niji">NijiJourney</option>
+            <option value="generic">汎用・自然文</option>
+          </select>
+        </div>
+        <div class="field">
+          <div class="field-head"><span class="field-title">補完の強さ</span></div>
+          <select id="p_expand"><option value="safe">原文重視</option><option value="balanced" selected>標準</option><option value="rich">積極的に補完</option></select>
+        </div>
+      </div>
+      <div class="pills">
+        <button class="primary" id="splitPrompt">簡易分解</button>
+        <button id="applyLatestChar">保存キャラを反映</button>
+        <button id="makeAIRequest">AI整形依頼文を作る</button>
+        <button id="clearPrompt">全消去</button>
+      </div>
+      <div class="notice" style="margin-top:12px">「簡易分解」は端末内辞書による補助機能です。複雑な日本語の意味理解は、右の「AI整形依頼文」をChatGPT/Geminiへ貼る用途を想定しています。</div>
+    </div>
+  </div>
+
+  <div id="pcharacter" class="subpanel" data-parent="prompt">
+    <div class="card">
+      <div class="field"><div class="field-head"><span class="field-title">主体・キャラクター</span></div><textarea id="p_subject"></textarea></div>
+      <div class="field"><div class="field-head"><span class="field-title">髪</span></div><textarea id="p_hair"></textarea></div>
+      <div class="field"><div class="field-head"><span class="field-title">顔・瞳・表情</span></div><textarea id="p_face"></textarea></div>
+      <div class="field"><div class="field-head"><span class="field-title">衣装・装飾</span></div><textarea id="p_outfit"></textarea></div>
+    </div>
+  </div>
+
+  <div id="pscene" class="subpanel" data-parent="prompt">
+    <div class="card">
+      <div class="field"><div class="field-head"><span class="field-title">ポーズ・動作</span></div><textarea id="p_pose"></textarea></div>
+      <div class="field"><div class="field-head"><span class="field-title">構図・カメラ</span></div><textarea id="p_camera"></textarea></div>
+      <div class="field"><div class="field-head"><span class="field-title">背景・場所</span></div><textarea id="p_background"></textarea></div>
+      <div class="field"><div class="field-head"><span class="field-title">補足・未解釈</span></div><textarea id="p_extra"></textarea></div>
+    </div>
+  </div>
+
+  <div id="pstyle" class="subpanel" data-parent="prompt">
+    <div class="card">
+      <div class="field"><div class="field-head"><span class="field-title">光・色・空気感</span></div><textarea id="p_light"></textarea></div>
+      <div class="field"><div class="field-head"><span class="field-title">画風・質感</span></div><textarea id="p_style"></textarea></div>
+      <div class="field"><div class="field-head"><span class="field-title">ネガティブ</span></div><textarea id="p_negative"></textarea></div>
+    </div>
+  </div>
+
+  <div id="presult" class="subpanel" data-parent="prompt">
+    <div class="card">
+      <div class="card-title"><h3>規格別設定</h3></div>
+      <div class="grid2">
+        <div class="field"><div class="field-head"><span class="field-title">アスペクト比</span></div><select id="p_ar"><option>2:3</option><option>3:4</option><option>1:1</option><option>4:3</option><option>16:9</option><option>9:16</option></select></div>
+        <div class="field"><div class="field-head"><span class="field-title">Niji stylize</span></div><input id="p_stylize" type="number" min="0" max="1000" value="100"></div>
+      </div>
+      <div class="pills"><button class="primary" id="buildPrompt">最終プロンプト生成</button><button id="copyPrompt">コピー</button><button id="sharePrompt">共有</button></div>
+      <div class="outputbox"><div class="field-head"><span class="field-title">Positive / Main</span></div><textarea id="p_output"></textarea></div>
+      <div class="outputbox"><div class="field-head"><span class="field-title">Negative</span></div><textarea id="p_neg_output"></textarea></div>
+    </div>
+  </div>
 </section>
 
-<section id="data" class="panel">
-  <div class="section-title"><div><span class="step">01</span><h2>保存キャラクター</h2></div></div>
-  <div id="characterList" class="card-list"></div>
-
-  <div class="section-title"><div><span class="step">02</span><h2>全データのバックアップ</h2></div></div>
-  <div class="actions">
-    <button id="backupBtn" class="primary">JSONバックアップを作成</button>
-    <label class="file-button">JSONを読み込む<input id="restoreFile" type="file" accept=".json,application/json"></label>
-    <button id="copyBackupBtn">バックアップをコピー</button>
+<section id="library" class="mainpanel">
+  <div class="hero">
+    <h2>語彙辞書</h2>
+    <p>髪型・衣装・ポーズ・背景・画風などを日本語で探し、タップして画像プロンプトの対応欄へ追加できます。</p>
   </div>
-  <textarea id="backupArea" rows="14" placeholder="バックアップJSON"></textarea>
+  <div class="card">
+    <div class="field"><div class="field-head"><span class="field-title">検索</span></div><input id="libSearch" placeholder="例：三つ編み / gothic / 雨 / 逆光"></div>
+    <div id="libCats" class="pills"></div>
+  </div>
+  <div id="libResults" class="library-results"></div>
+  <div class="card">
+    <div class="card-title"><h3>自作語彙を追加</h3></div>
+    <div class="grid2">
+      <div class="field"><div class="field-head"><span class="field-title">カテゴリ</span></div><select id="customCat"><option>hair</option><option>face</option><option>outfit</option><option>pose</option><option>camera</option><option>background</option><option>light</option><option>style</option><option>negative</option></select></div>
+      <div class="field"><div class="field-head"><span class="field-title">表示名</span></div><input id="customJa" placeholder="例：外ハネミディアム"></div>
+    </div>
+    <div class="field"><div class="field-head"><span class="field-title">プロンプト語</span></div><input id="customEn" placeholder="例：medium hair with flipped-out ends"></div>
+    <button class="primary" id="addWord">語彙を追加</button>
+  </div>
+</section>
 
-  <div class="info-card">
-    <h3>Appleメモ向け運用</h3>
-    <p>AI用テキストの先頭に固有ID、末尾に #タグ を入れます。Appleメモでは #OC、#作品名、#役割、#属性 などで検索できます。別キャラとの関係は固有IDを記載しておくと横断検索が容易です。</p>
+<section id="storage" class="mainpanel">
+  <div class="hero">
+    <h2>保存・バックアップ</h2>
+    <p>キャラクターはこのiPhoneのブラウザ内に保存されます。重要なデータはJSONバックアップも作成してください。</p>
+  </div>
+  <div class="card">
+    <div class="card-title"><h3>保存キャラクター</h3><span class="badge" id="savedCount">0件</span></div>
+    <div id="savedList" class="saved-list"></div>
+  </div>
+  <div class="card">
+    <div class="card-title"><h3>全データのバックアップ</h3></div>
+    <div class="pills"><button class="primary" id="makeBackup">バックアップJSON作成</button><button id="copyBackup">コピー</button><label style="display:inline-flex"><input id="restoreFile" type="file" accept=".json,application/json" style="display:none"><button type="button" id="restoreButton">JSONを読み込む</button></label></div>
+    <div class="outputbox"><textarea id="backupArea" placeholder="バックアップJSON"></textarea></div>
+  </div>
+  <div class="card">
+    <div class="card-title"><h3>Appleメモ向け</h3></div>
+    <p class="section-note">AI用テキストでは固有IDと #タグ を一緒に出力します。例：<br>#OC #fantasy #ID_CHAR-AB12CD<br>他キャラとの関係欄にも固有IDを書いておくと検索しやすくなります。</p>
   </div>
 </section>
 </main>
+</div>
+<div id="toast" class="toast"></div>
 
-<datalist id="hairStyles"></datalist>
-<datalist id="outfits"></datalist>
-<datalist id="bodyTypes">
-  <option value="華奢"><option value="細身"><option value="標準"><option value="健康的"><option value="筋肉質"><option value="グラマー"><option value="小柄"><option value="長身">
-</datalist>
-
-<div id="toast" class="toast" role="status"></div>
-
-<script src="./app.js"></script>
 <script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+"use strict";
+const $=id=>document.getElementById(id);
+const $$=sel=>[...document.querySelectorAll(sel)];
+const STORE={chars:"ocps2_chars",words:"ocps2_words",prompt:"ocps2_prompt"};
+
+function toast(s){const e=$("toast");e.textContent=s;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),1700)}
+function uid(){const a=crypto.getRandomValues(new Uint32Array(1))[0].toString(36).toUpperCase().slice(0,6);return "CHAR-"+a}
+function safeParse(s,f){try{return JSON.parse(s)??f}catch{return f}}
+function getChars(){return safeParse(localStorage.getItem(STORE.chars),"")||[]}
+function getCustomWords(){return safeParse(localStorage.getItem(STORE.words),"")||[]}
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+function v(id){return ($(id)?.value??"").trim()}
+function setv(id,x){if($(id))$(id).value=x??""}
+function uniqueComma(s){return [...new Set(s.split(/[,、\n]+/).map(x=>x.trim()).filter(Boolean))].join(", ")}
+function join(a,sep=", "){return a.map(x=>(x??"").trim()).filter(Boolean).join(sep)}
+function tags(s){return s.split(/[\s,、]+/).map(x=>x.trim()).filter(Boolean).map(x=>x.startsWith("#")?x:"#"+x.replace(/^#+/,""))}
+
+const customSelectIds=["c_role","c_agefeel","c_gender","c_height","c_body","c_species","c_skin","c_hair_color","c_hair_length","c_hair_style","c_bangs","c_eye_color","c_eye_shape","c_face","c_outfit_cat"];
+function resolved(id){const s=$(id);if(!s)return"";return s.value==="__custom"?v(id+"_custom"):s.value}
+function initCustomSelects(){
+  customSelectIds.forEach(id=>{
+    const s=$(id), c=$(id+"_custom"); if(!s||!c)return;
+    const sync=()=>c.classList.toggle("show",s.value==="__custom");
+    s.addEventListener("change",sync); sync();
+  });
 }
+
+$$(".topnav button").forEach(b=>b.onclick=()=>{
+  $$(".topnav button").forEach(x=>x.classList.toggle("active",x===b));
+  $$(".mainpanel").forEach(p=>p.classList.toggle("active",p.id===b.dataset.main));
+  scrollTo({top:0,behavior:"smooth"});
+});
+$$(".subnav button").forEach(b=>b.onclick=()=>{
+  const nav=b.closest(".subnav"), parent=nav.dataset.subnav;
+  nav.querySelectorAll("button").forEach(x=>x.classList.toggle("active",x===b));
+  $$(`.subpanel[data-parent="${parent}"]`).forEach(p=>p.classList.toggle("active",p.id===b.dataset.sub));
+  scrollTo({top:0,behavior:"smooth"});
+});
+
+const likerts=[
+["sociability","社交性","一人を好む","人と関わる"],
+["assertive","自己主張","控えめ","強い"],
+["empathy","共感性","割り切る","共感的"],
+["optimism","楽観性","悲観的","楽観的"],
+["discipline","規律性","気分優先","計画的"],
+["curiosity","好奇心","慎重","好奇心旺盛"],
+["courage","大胆さ","怖がり","大胆"],
+["warmth","親しみ","距離を置く","親しみやすい"],
+["seriousness","真面目さ","奔放","生真面目"],
+["expressive","感情表現","隠す","表に出す"],
+["patience","忍耐力","短気","忍耐強い"],
+["independence","自立性","依存的","自立的"]
+];
+function initLikert(){
+  $("likertList").innerHTML=likerts.map(([k,n,l,r])=>`
+  <div class="likert-item" data-lk="${k}">
+    <div class="likert-top"><span class="likert-name">${n}</span><span class="likert-value"><b id="lk_${k}_v">4</b>/7</span></div>
+    <div class="scale">${[1,2,3,4,5,6,7].map(x=>`<button type="button" data-v="${x}" class="${x===4?"selected":""}">${x}</button>`).join("")}</div>
+    <div class="scale-labels"><span>${l}</span><span>${r}</span></div>
+    <input type="hidden" id="lk_${k}" value="4">
+  </div>`).join("");
+  $$(".likert-item .scale button").forEach(b=>b.onclick=()=>{
+    const box=b.closest(".likert-item"),k=box.dataset.lk,n=Number(b.dataset.v);
+    box.querySelectorAll("button").forEach(x=>x.classList.toggle("selected",x===b));
+    setv("lk_"+k,n);$("lk_"+k+"_v").textContent=n;
+  });
+}
+
+function initMatrices(){
+  $$("[data-matrix]").forEach(card=>{
+    const key=card.dataset.matrix, box=card.querySelector(".matrix"), dot=card.querySelector(".crosshair");
+    const rx=$("m_"+key+"_x"), ry=$("m_"+key+"_y"), xv=$("m_"+key+"_xv"), yv=$("m_"+key+"_yv");
+    const render=()=>{
+      const x=Number(rx.value), y=Number(ry.value);
+      dot.style.left=x+"%";dot.style.top=(100-y)+"%";xv.textContent=x;yv.textContent=y;
+    };
+    rx.addEventListener("input",render);ry.addEventListener("input",render);
+    const updateFromPoint=(clientX,clientY)=>{
+      const r=box.getBoundingClientRect();
+      const x=Math.max(0,Math.min(100,(clientX-r.left)/r.width*100));
+      const y=Math.max(0,Math.min(100,100-(clientY-r.top)/r.height*100));
+      rx.value=Math.round(x);ry.value=Math.round(y);render();
+    };
+    box.addEventListener("pointerdown",e=>{box.setPointerCapture?.(e.pointerId);updateFromPoint(e.clientX,e.clientY)});
+    box.addEventListener("pointermove",e=>{if(e.buttons||e.pointerType==="touch")updateFromPoint(e.clientX,e.clientY)});
+    render();
+  });
+}
+
+const aiDefs=[
+["name","名前"],["role","役割"],["age","年齢・年齢感"],["gender","性別・ジェンダー表現"],
+["species","種族"],["body","体型"],["hair","髪色・髪型"],["face","顔・瞳"],
+["outfit","衣装"],["motif","モチーフ・配色"],["personality","性格の細部"],["speech","口調"],
+["backstory","経歴"],["occupation","立場・職業"],["ability","能力"],["goal","目的・欲求"],
+["values","価値観"],["conflict","弱点・葛藤"],["relations","関係性"],["minor","その他の細部"]
+];
+function initAIChoices(){
+  $("aiChoices").innerHTML=aiDefs.map(([k,n])=>`<div class="checkcard"><input type="checkbox" id="ai_${k}" data-ai="${k}"><label for="ai_${k}"><span class="mark"></span><span>${n}</span></label></div>`).join("");
+}
+$("aiToggleAll").onclick=()=>{
+  const boxes=$$("#aiChoices input"),all=boxes.every(x=>x.checked);boxes.forEach(x=>x.checked=!all);
+};
+
+function setSelect(id,value){
+  const s=$(id),c=$(id+"_custom");if(!s)return;
+  const has=[...s.options].some(o=>o.value===value || o.text===value);
+  if(has){s.value=value;c?.classList.remove("show");if(c)c.value=""}
+  else if(value){s.value="__custom";if(c){c.value=value;c.classList.add("show")}}
+  else{s.value="";c?.classList.remove("show");if(c)c.value=""}
+}
+function characterData(){
+  const lk={};likerts.forEach(([k])=>lk[k]=Number(v("lk_"+k)||4));
+  const ai=$$("#aiChoices input:checked").map(x=>x.dataset.ai);
+  return {
+    schema:"OCPS-CHAR-2",id:v("c_id")||uid(),name:v("c_name"),alias:v("c_alias"),project:v("c_project"),
+    role:resolved("c_role"),world:v("c_world"),concept:v("c_concept"),tags:tags(v("c_tags")),
+    appearance:{
+      age_feel:resolved("c_agefeel"),gender:resolved("c_gender"),height:resolved("c_height"),body:resolved("c_body"),
+      species:resolved("c_species"),skin:resolved("c_skin"),hair_color:resolved("c_hair_color"),hair_length:resolved("c_hair_length"),
+      hair_style:resolved("c_hair_style"),bangs:resolved("c_bangs"),eye_color:resolved("c_eye_color"),eye_shape:resolved("c_eye_shape"),
+      face:resolved("c_face"),face_feature:v("c_face_feature"),outfit_category:resolved("c_outfit_cat"),outfit:v("c_outfit"),
+      palette:v("c_palette"),motif:v("c_motif"),accessory:v("c_accessory")
+    },
+    matrices:{
+      visual:{x:Number(v("m_visual_x")),y:Number(v("m_visual_y"))},
+      social:{x:Number(v("m_social_x")),y:Number(v("m_social_y"))},
+      tone:{x:Number(v("m_tone_x")),y:Number(v("m_tone_y"))}
+    },
+    likert:lk,personality_notes:v("c_personality_notes"),first_person:v("c_firstperson"),speech:v("c_speech"),
+    backstory:v("c_backstory"),occupation:v("c_occupation"),ability:v("c_ability"),goal:v("c_goal"),values:v("c_values"),
+    conflict:v("c_conflict"),likes:v("c_likes"),dislikes:v("c_dislikes"),
+    relations:v("c_relations").split("\n").map(x=>x.trim()).filter(Boolean),
+    ai_decide:ai,ai_policy:v("c_ai_policy"),fixed:v("c_fixed"),updated_at:new Date().toISOString()
+  };
+}
+function dirLabel(n,l,r){if(n<=15)return"強く"+l+"寄り";if(n<=35)return l+"寄り";if(n<65)return"中間";if(n<85)return r+"寄り";return"強く"+r+"寄り"}
+function lkDesc(k,n){const a=likerts.find(x=>x[0]===k);return `${n}/7（${n<=2?a[2]:n>=6?a[3]:"中間"}）`}
+function charText(c){
+  const a=c.appearance;
+  return `# ORIGINAL CHARACTER DATA
+ID: ${c.id}
+Name: ${c.name||"[未指定]"}
+Alias/Reading: ${c.alias||"未指定"}
+Project: ${c.project||"未指定"}
+Role: ${c.role||"未指定"}
+World/Setting: ${c.world||"未指定"}
+
+## Core Concept
+${c.concept||"未指定"}
+
+## Appearance
+- Age feel: ${a.age_feel||"未指定"}
+- Gender presentation: ${a.gender||"未指定"}
+- Species: ${a.species||"未指定"}
+- Height: ${a.height||"未指定"}
+- Body: ${a.body||"未指定"}
+- Skin: ${a.skin||"未指定"}
+- Hair: ${join([a.hair_color,a.hair_length,a.hair_style,a.bangs]," / ")||"未指定"}
+- Eyes: ${join([a.eye_color,a.eye_shape]," / ")||"未指定"}
+- Face: ${join([a.face,a.face_feature]," / ")||"未指定"}
+- Outfit category: ${a.outfit_category||"未指定"}
+- Outfit: ${a.outfit||"未指定"}
+- Palette: ${a.palette||"未指定"}
+- Motif: ${a.motif||"未指定"}
+- Accessory: ${a.accessory||"未指定"}
+
+## Direction Matrices
+- Visual / cute→cool: ${c.matrices.visual.x}/100 (${dirLabel(c.matrices.visual.x,"可愛い","格好いい")})
+- Visual / rustic→glamorous: ${c.matrices.visual.y}/100 (${dirLabel(c.matrices.visual.y,"素朴","華やか")})
+- Social / introvert→extrovert: ${c.matrices.social.x}/100 (${dirLabel(c.matrices.social.x,"内向的","外向的")})
+- Social / passive→active: ${c.matrices.social.y}/100 (${dirLabel(c.matrices.social.y,"受動的","能動的")})
+- Tone / realistic→fantastical: ${c.matrices.tone.x}/100 (${dirLabel(c.matrices.tone.x,"現実的","幻想的")})
+- Tone / bright→dark: ${c.matrices.tone.y}/100 (${dirLabel(c.matrices.tone.y,"明るい","ダーク")})
+
+## Personality Scales
+${likerts.map(([k,n])=>`- ${n}: ${lkDesc(k,c.likert[k])}`).join("\n")}
+
+## Personality / Voice
+${c.personality_notes||"未指定"}
+- First person: ${c.first_person||"未指定"}
+- Speech: ${c.speech||"未指定"}
+
+## Background / Current State
+- Backstory: ${c.backstory||"未指定"}
+- Occupation/Position: ${c.occupation||"未指定"}
+- Ability/Strength: ${c.ability||"未指定"}
+- Goal/Desire: ${c.goal||"未指定"}
+- Values: ${c.values||"未指定"}
+- Weakness/Conflict: ${c.conflict||"未指定"}
+- Likes: ${c.likes||"未指定"}
+- Dislikes: ${c.dislikes||"未指定"}
+
+## Relationships
+${c.relations.length?c.relations.map(x=>"- "+x).join("\n"):"未指定"}
+
+## AI Discretion
+Policy: ${c.ai_policy}
+May decide: ${c.ai_decide.length?c.ai_decide.join(", "):"なし"}
+Must preserve: ${c.fixed||"明示された設定すべて"}
+
+## Instructions for AI
+- 明示された設定は確定事項として保持する。
+- 未指定と「AIに決めてよい」を混同しない。
+- AIが積極的に決めてよいのは May decide に含まれる項目のみ。
+- 数値尺度と一文コンセプトが競合した場合は、ユーザー指定の文章を優先し、矛盾を明示する。
+- 追加提案は「確定設定」と分けて提示する。
+- 画像生成用へ変換する場合は subject / hair / face / outfit / pose / camera / background / lighting / style / negative を分離する。
+
+## Search Tags
+${c.tags.join(" ")||"#OC"}
+#ID_${c.id.replace(/[^A-Za-z0-9_-]/g,"_")}`;
+}
+function loreText(c){
+  const a=c.appearance,keys=[c.name,c.alias,c.id,...c.tags.map(x=>x.replace(/^#/,""))].filter(Boolean);
+  return `Lorebook Entry
+Key: ${keys.join(", ")}
+Category: character
+ID: ${c.id}
+
+${c.name||"このキャラクター"}は${c.project?`「${c.project}」の`:c.world?`${c.world}の`:""}${c.role||"登場人物"}。
+核となるコンセプト: ${c.concept||"未指定"}
+
+外見: ${join([a.age_feel,a.gender,a.species,a.height,a.body,a.skin,a.hair_color,a.hair_length,a.hair_style,a.bangs,a.eye_color,a.eye_shape,a.face,a.face_feature,a.outfit_category,a.outfit,a.palette,a.motif,a.accessory]," / ")||"未指定"}
+性格: ${c.personality_notes||likerts.map(([k,n])=>`${n}${c.likert[k]}/7`).join("、")}
+口調: ${join([c.first_person,c.speech]," / ")||"未指定"}
+背景: ${c.backstory||"未指定"}
+現在: ${c.occupation||"未指定"}
+目的: ${c.goal||"未指定"}
+弱点・葛藤: ${c.conflict||"未指定"}
+関係: ${c.relations.join(" / ")||"未指定"}
+
+固定条件を保持し、AI裁量として指定された項目だけを補完する。`;
+}
+function saveCharacter(){
+  const c=characterData();if(!c.name&&!c.concept){toast("名前か一文コンセプトを入力してください");return}
+  const a=getChars(),i=a.findIndex(x=>x.id===c.id);if(i>=0)a[i]=c;else a.unshift(c);
+  localStorage.setItem(STORE.chars,JSON.stringify(a));renderSaved();toast("保存しました");
+}
+function setCharacter(c){
+  setv("c_id",c.id);setv("c_name",c.name);setv("c_alias",c.alias);setv("c_project",c.project);setv("c_world",c.world);setv("c_concept",c.concept);setv("c_tags",(c.tags||[]).join(" "));
+  setSelect("c_role",c.role);
+  const a=c.appearance||{};
+  [["c_agefeel",a.age_feel],["c_gender",a.gender],["c_height",a.height],["c_body",a.body],["c_species",a.species],["c_skin",a.skin],
+   ["c_hair_color",a.hair_color],["c_hair_length",a.hair_length],["c_hair_style",a.hair_style],["c_bangs",a.bangs],["c_eye_color",a.eye_color],
+   ["c_eye_shape",a.eye_shape],["c_face",a.face],["c_outfit_cat",a.outfit_category]].forEach(([id,x])=>setSelect(id,x));
+  setv("c_face_feature",a.face_feature);setv("c_outfit",a.outfit);setv("c_palette",a.palette);setv("c_motif",a.motif);setv("c_accessory",a.accessory);
+  const m=c.matrices||{};
+  [["visual",m.visual],["social",m.social],["tone",m.tone]].forEach(([k,o])=>{if(o){setv("m_"+k+"_x",o.x??50);setv("m_"+k+"_y",o.y??50);$("m_"+k+"_x").dispatchEvent(new Event("input"))}});
+  likerts.forEach(([k])=>{const n=c.likert?.[k]??4;setv("lk_"+k,n);$("lk_"+k+"_v").textContent=n;$$(`.likert-item[data-lk="${k}"] .scale button`).forEach(b=>b.classList.toggle("selected",Number(b.dataset.v)===n))});
+  [["c_personality_notes",c.personality_notes],["c_firstperson",c.first_person],["c_speech",c.speech],["c_backstory",c.backstory],["c_occupation",c.occupation],["c_ability",c.ability],["c_goal",c.goal],["c_values",c.values],["c_conflict",c.conflict],["c_likes",c.likes],["c_dislikes",c.dislikes],["c_relations",(c.relations||[]).join("\n")],["c_fixed",c.fixed]].forEach(([id,x])=>setv(id,x));
+  setv("c_ai_policy",c.ai_policy||"balanced");$$("#aiChoices input").forEach(x=>x.checked=(c.ai_decide||[]).includes(x.dataset.ai));
+}
+function renderSaved(){
+  const a=getChars();$("savedCount").textContent=a.length+"件";
+  $("savedList").innerHTML=a.length?a.map(c=>`<div class="saved" data-id="${esc(c.id)}"><h4>${esc(c.name||"名称未定")}</h4><p>${esc(c.id)} ${c.project?"· "+esc(c.project):""}</p><p>${esc(c.concept||"コンセプト未入力")}</p><div class="mini-actions"><button data-act="load">編集</button><button data-act="prompt">画像Promptへ</button><button data-act="copy">AIテキスト</button><button data-act="delete" class="danger">削除</button></div></div>`).join(""):`<p class="section-note">まだ保存されたキャラクターはありません。</p>`;
+  $$("#savedList [data-act]").forEach(b=>b.onclick=()=>{
+    const id=b.closest(".saved").dataset.id,c=getChars().find(x=>x.id===id);if(!c)return;
+    if(b.dataset.act==="load"){setCharacter(c);activateMain("character");activateSub("character","basic");toast("読み込みました")}
+    if(b.dataset.act==="prompt"){charToPrompt(c);activateMain("prompt");activateSub("prompt","pcharacter");toast("反映しました")}
+    if(b.dataset.act==="copy")copyText(charText(c));
+    if(b.dataset.act==="delete"){localStorage.setItem(STORE.chars,JSON.stringify(getChars().filter(x=>x.id!==id)));renderSaved();toast("削除しました")}
+  });
+}
+function activateMain(id){const b=$$(`.topnav button`).find(x=>x.dataset.main===id);b?.click()}
+function activateSub(parent,id){const b=$$(`.subnav[data-subnav="${parent}"] button`).find(x=>x.dataset.sub===id);b?.click()}
+
+$("regenId").onclick=()=>setv("c_id",uid());
+$("saveChar").onclick=saveCharacter;
+$("outText").onclick=()=>{$("charOutTitle").textContent="AI用テキスト";setv("charOut",charText(characterData()))};
+$("outJson").onclick=()=>{$("charOutTitle").textContent="JSON";setv("charOut",JSON.stringify(characterData(),null,2))};
+$("outLore").onclick=()=>{$("charOutTitle").textContent="Lorebook";setv("charOut",loreText(characterData()))};
+$("sendPrompt").onclick=()=>{charToPrompt(characterData());activateMain("prompt");activateSub("prompt","pcharacter");toast("画像Promptへ反映しました")};
+$("copyCharOut").onclick=()=>copyText(v("charOut"));
+$("shareCharOut").onclick=()=>shareText("OC Character Data",v("charOut"));
+
+async function copyText(s){if(!s){toast("コピーする内容がありません");return}try{await navigator.clipboard.writeText(s);toast("コピーしました")}catch{toast("コピーできませんでした")}}
+async function shareText(title,s){if(!s){toast("共有する内容がありません");return}if(navigator.share){try{await navigator.share({title,text:s});return}catch(e){if(e.name==="AbortError")return}}copyText(s)}
+
+const vocab=[
+["hair","ボブ","bob cut"],["hair","ショートボブ","short bob"],["hair","レイヤーボブ","layered bob"],["hair","ウルフカット","wolf cut"],["hair","ピクシーカット","pixie cut"],["hair","姫カット","hime cut"],["hair","ストレート","straight hair"],["hair","ゆるウェーブ","loose wavy hair"],["hair","巻き髪","curly hair"],["hair","外ハネ","flipped-out ends"],["hair","内巻き","inward-curled ends"],["hair","ポニーテール","ponytail"],["hair","ハイポニー","high ponytail"],["hair","ローポニー","low ponytail"],["hair","サイドテール","side ponytail"],["hair","ツインテール","twintails"],["hair","ローツイン","low twintails"],["hair","ハーフツイン","half twintails"],["hair","ハーフアップ","half updo"],["hair","お団子","hair bun"],["hair","ツインお団子","double bun"],["hair","三つ編み","braid"],["hair","サイドブレイド","side braid"],["hair","編み込み","french braid"],["hair","フィッシュボーン","fishtail braid"],["hair","クラウンブレイド","crown braid"],["hair","縦ロール","drill hair"],["hair","ぱっつん","blunt bangs"],["hair","シースルーバング","see-through bangs"],["hair","斜め前髪","side-swept bangs"],["hair","センター分け","center-parted bangs"],["hair","片目隠れ","hair over one eye"],["hair","アホ毛","ahoge"],["hair","触角","sidelocks"],
+["face","たれ目","droopy eyes"],["face","つり目","upturned eyes"],["face","ジト目","half-lidded eyes"],["face","切れ長","narrow eyes"],["face","大きな瞳","large eyes"],["face","丸顔","round face"],["face","卵型の顔","oval face"],["face","そばかす","freckles"],["face","泣きぼくろ","mole under eye"],["face","八重歯","fang"],["face","赤面","blush"],["face","微笑み","gentle smile"],["face","寂しそう","melancholic expression"],["face","困り眉","worried eyebrows"],["face","無表情","expressionless"],
+["outfit","セーラー服","sailor uniform"],["outfit","ブレザー制服","school blazer"],["outfit","カーディガン","cardigan"],["outfit","セーター","sweater"],["outfit","パーカー","hoodie"],["outfit","オーバーサイズパーカー","oversized hoodie"],["outfit","ワンピース","dress"],["outfit","サンドレス","sundress"],["outfit","ゴシックドレス","gothic dress"],["outfit","ロリータ","lolita fashion"],["outfit","クラシカルロリータ","classic lolita"],["outfit","メイド服","maid outfit"],["outfit","チャイナドレス","qipao"],["outfit","着物","kimono"],["outfit","浴衣","yukata"],["outfit","巫女服","miko outfit"],["outfit","修道女","nun habit"],["outfit","魔法使いローブ","mage robe"],["outfit","旅装","traveler outfit"],["outfit","軽装鎧","light armor"],["outfit","騎士鎧","knight armor"],["outfit","ショートケープ","short cape"],["outfit","マント","cloak"],["outfit","コルセット","corset"],["outfit","ブラウス","blouse"],["outfit","フリルブラウス","frilled blouse"],["outfit","プリーツスカート","pleated skirt"],["outfit","ショートパンツ","shorts"],["outfit","ニーソックス","thighhighs"],["outfit","タイツ","tights"],["outfit","ブーツ","boots"],["outfit","軍服","military uniform"],["outfit","サイバーウェア","cyberpunk outfit"],
+["pose","立ち姿","standing"],["pose","歩く","walking"],["pose","走る","running"],["pose","座る","sitting"],["pose","膝立ち","kneeling"],["pose","しゃがむ","squatting"],["pose","振り返る","looking back"],["pose","腕を組む","arms crossed"],["pose","手を伸ばす","reaching out"],["pose","髪を触る","touching hair"],["pose","頬に手","hand on cheek"],["pose","手を振る","waving"],["pose","振り向きざま","turning around"],
+["camera","顔アップ","close-up portrait"],["camera","バストアップ","bust shot"],["camera","腰上","cowboy shot"],["camera","全身","full body"],["camera","横顔","profile view"],["camera","背中越し","over-the-shoulder view"],["camera","ローアングル","low angle"],["camera","ハイアングル","high angle"],["camera","俯瞰","overhead view"],["camera","煽り","worm-eye view"],["camera","広角","wide-angle lens"],["camera","望遠","telephoto lens"],["camera","浅い被写界深度","shallow depth of field"],["camera","三分割構図","rule of thirds composition"],["camera","中央構図","centered composition"],["camera","ダッチアングル","dutch angle"],
+["background","白背景","plain white background"],["background","黒背景","plain black background"],["background","中世の街","medieval european town"],["background","石畳の路地","cobblestone alley"],["background","古い街","old european town"],["background","森","forest"],["background","深い森","deep forest"],["background","花畑","flower field"],["background","湖畔","lakeside"],["background","海辺","seaside"],["background","廃墟","ruins"],["background","石造りの牢","stone prison cell"],["background","図書館","old library"],["background","教会","gothic church"],["background","城内","castle interior"],["background","酒場","fantasy tavern"],["background","市場","medieval marketplace"],["background","雨の街","rainy street"],["background","夜の街","night street"],["background","屋上","rooftop"],["background","教室","classroom"],["background","駅","train station"],["background","近未来都市","futuristic city"],["background","宇宙船","spaceship interior"],
+["light","逆光","backlighting"],["light","リムライト","rim lighting"],["light","柔らかな光","soft lighting"],["light","木漏れ日","dappled sunlight"],["light","夕焼け","golden hour"],["light","月明かり","moonlight"],["light","ネオン","neon lighting"],["light","キャンドル","candlelight"],["light","雨の反射","wet reflections"],["light","薄明","twilight"],["light","霧","misty atmosphere"],["light","透明感","clear luminous atmosphere"],["light","曇天","overcast lighting"],["light","強いコントラスト","high-contrast lighting"],
+["style","映画的","cinematic"],["style","透明感","luminous and translucent rendering"],["style","繊細","delicate details"],["style","柔らかい塗り","soft rendering"],["style","厚塗り","painterly rendering"],["style","水彩","watercolor"],["style","色鉛筆","colored pencil texture"],["style","インク","ink illustration"],["style","アニメ塗り","anime cel shading"],["style","セミリアル","semi-realistic anime style"],["style","絵本","storybook illustration"],["style","レトロ","retro illustration"],["style","ゴシック","gothic aesthetic"],["style","幻想的","ethereal fantasy"],["style","ダークファンタジー","dark fantasy"],["style","高精細","highly detailed"],["style","繊細な線画","refined linework"],["style","マットな質感","matte texture"],
+["negative","手崩れ","bad hands"],["negative","余分な指","extra fingers"],["negative","欠損指","missing fingers"],["negative","余分な腕","extra arms"],["negative","低解像度","lowres"],["negative","ぼやけ","blurry"],["negative","文字","text"],["negative","透かし","watermark"],["negative","ロゴ","logo"],["negative","過剰な彩度","oversaturated"],["negative","歪んだ顔","deformed face"],["negative","重複人物","duplicate person"]
+];
+function allVocab(){return [...vocab,...getCustomWords().map(x=>[x.cat,x.ja,x.en])]}
+let libCat="all";
+const catNames={all:"すべて",hair:"髪",face:"顔",outfit:"衣装",pose:"ポーズ",camera:"構図",background:"背景",light:"光",style:"画風",negative:"ネガティブ"};
+function renderLib(){
+  const cats=Object.keys(catNames);$("libCats").innerHTML=cats.map(c=>`<button class="pill ${c===libCat?"selected":""}" data-cat="${c}">${catNames[c]}</button>`).join("");
+  $$("#libCats button").forEach(b=>b.onclick=()=>{libCat=b.dataset.cat;renderLib()});
+  const q=v("libSearch").toLowerCase();
+  const arr=allVocab().filter(([c,j,e])=>(libCat==="all"||c===libCat)&&(!q||j.toLowerCase().includes(q)||e.toLowerCase().includes(q)));
+  const g={};arr.forEach(x=>(g[x[0]]??=[]).push(x));
+  $("libResults").innerHTML=Object.entries(g).map(([c,a])=>`<div class="libgroup"><h4>${catNames[c]||c} · ${a.length}</h4><div class="wordchips">${a.map(([cc,j,e])=>`<button class="wordchip" data-cat="${cc}" data-en="${esc(e)}">${esc(j)}<small>${esc(e)}</small></button>`).join("")}</div></div>`).join("")||`<div class="section-note">該当する語彙がありません。</div>`;
+  $$(".wordchip").forEach(b=>b.onclick=()=>addToPrompt(b.dataset.cat,b.dataset.en));
+}
+$("libSearch").addEventListener("input",renderLib);
+function addToPrompt(cat,en){
+  const map={hair:"p_hair",face:"p_face",outfit:"p_outfit",pose:"p_pose",camera:"p_camera",background:"p_background",light:"p_light",style:"p_style",negative:"p_negative"};
+  const id=map[cat];if(!id)return;setv(id,uniqueComma(join([v(id),en])));toast("画像Promptへ追加しました");
+}
+$("addWord").onclick=()=>{
+  const cat=v("customCat"),ja=v("customJa"),en=v("customEn");if(!ja||!en){toast("表示名とプロンプト語を入力してください");return}
+  const a=getCustomWords();a.push({cat,ja,en});localStorage.setItem(STORE.words,JSON.stringify(a));setv("customJa","");setv("customEn","");renderLib();toast("追加しました");
+};
+
+const rules=[
+["雨","background","rainy scene"],["夜","background","night"],["古い街","background","old european town"],["中世","background","medieval european setting"],
+["路地","background","narrow alley"],["森","background","forest"],["教室","background","classroom"],["牢","background","stone prison cell"],
+["振り返","pose","looking back"],["座","pose","sitting"],["立って","pose","standing"],["歩","pose","walking"],["走","pose","running"],["手を伸ば","pose","reaching out"],
+["全身","camera","full body"],["顔アップ","camera","close-up portrait"],["バストアップ","camera","bust shot"],
+["寂し","face","melancholic expression"],["悲し","face","sad expression"],["笑","face","smile"],["無表情","face","expressionless"],
+["透明感","style","luminous and translucent rendering"],["映画","style","cinematic"],["水彩","style","watercolor"],["厚塗り","style","painterly rendering"],
+["逆光","light","backlighting"],["月明かり","light","moonlight"],["夕焼け","light","golden hour"],["柔らかい光","light","soft lighting"]
+];
+function splitPrompt(){
+  const src=v("p_source");if(!src){toast("元の説明を入力してください");return}
+  const f={subject:[],hair:[],face:[],outfit:[],pose:[],camera:[],background:[],light:[],style:[],extra:[]};
+  let residue=src;
+  const subj=[["女の子","1girl"],["少女","1girl"],["女性","1woman"],["男の子","1boy"],["少年","1boy"],["男性","1man"],["青年","1man"]];
+  subj.forEach(([j,e])=>{if(src.includes(j)){f.subject.push(e);residue=residue.split(j).join(" ")}});
+  allVocab().sort((a,b)=>b[1].length-a[1].length).forEach(([c,j,e])=>{if(src.includes(j)&&f[c]&&!f[c].includes(e)){f[c].push(e);residue=residue.split(j).join(" ")}});
+  rules.forEach(([j,c,e])=>{if(src.includes(j)&&!f[c].includes(e)){f[c].push(e);residue=residue.split(j).join(" ")}});
+  if(!f.subject.length)f.subject.push("single character");
+  if(v("p_expand")!=="safe"){if(!f.camera.length)f.camera.push("balanced composition");if(!f.style.length)f.style.push("highly detailed illustration")}
+  if(v("p_expand")==="rich"){f.style.push("refined linework","cohesive color design");f.light.push("subtle atmospheric depth")}
+  residue=residue.replace(/[、。,.!！?？「」『』（）()]/g," ").replace(/\s+/g," ").trim();if(residue)f.extra.push(residue);
+  Object.entries(f).forEach(([k,a])=>setv("p_"+k,uniqueComma(a.join(", "))));
+  if(!v("p_negative"))setv("p_negative","lowres, blurry, bad hands, extra fingers, extra limbs, deformed face, text, watermark, logo");
+  toast("カテゴリへ分解しました");
+}
+$("splitPrompt").onclick=splitPrompt;
+function charToPrompt(c){
+  const a=c.appearance||{};
+  setv("p_subject",join([c.name?`original character: ${c.name}`:"original character",a.age_feel,a.gender,a.species]));
+  setv("p_hair",join([a.hair_color,a.hair_length,a.hair_style,a.bangs]));
+  setv("p_face",join([a.eye_color,a.eye_shape,a.face,a.face_feature]));
+  setv("p_outfit",join([a.outfit_category,a.outfit,a.palette,a.motif,a.accessory]));
+  if(c.concept)setv("p_extra",c.concept);
+}
+$("applyLatestChar").onclick=()=>{const a=getChars();if(!a.length){toast("保存キャラがありません");return}charToPrompt(a[0]);toast("最新の保存キャラを反映しました")};
+$("clearPrompt").onclick=()=>{$$("#prompt textarea").forEach(x=>x.value="");toast("クリアしました")};
+
+function buildPrompt(){
+  const p={subject:v("p_subject"),hair:v("p_hair"),face:v("p_face"),outfit:v("p_outfit"),pose:v("p_pose"),camera:v("p_camera"),background:v("p_background"),light:v("p_light"),style:v("p_style"),extra:v("p_extra"),negative:v("p_negative")};
+  const target=v("p_target");let main="",neg=p.negative;
+  if(target==="nai5"||target==="nai45"){main=uniqueComma(join([p.subject,p.hair,p.face,p.outfit,p.pose,p.camera,p.background,p.light,p.style,p.extra]));}
+  else if(target==="sdxl"){main=uniqueComma(join([p.subject,p.hair,p.face,p.outfit,p.pose,p.camera,p.background,p.light,p.style,p.extra]));}
+  else if(target==="niji"){main=join([p.subject&&`An illustration of ${p.subject}`,p.hair&&`hair: ${p.hair}`,p.face,p.outfit&&`wearing ${p.outfit}`,p.pose,p.camera,p.background&&`in ${p.background}`,p.light,p.style,p.extra])+` --ar ${v("p_ar")} --stylize ${v("p_stylize")}`;neg=neg?`--no ${neg}`:"";}
+  else{main=`Subject: ${p.subject||"unspecified"}\nHair: ${p.hair||"unspecified"}\nFace: ${p.face||"unspecified"}\nOutfit: ${p.outfit||"unspecified"}\nPose: ${p.pose||"unspecified"}\nCamera: ${p.camera||"unspecified"}\nBackground: ${p.background||"unspecified"}\nLighting: ${p.light||"unspecified"}\nStyle: ${p.style||"unspecified"}\nExtra: ${p.extra||"none"}`;}
+  setv("p_output",main);setv("p_neg_output",neg);localStorage.setItem(STORE.prompt,JSON.stringify({...p,target,main,neg}));toast("生成しました");
+}
+$("buildPrompt").onclick=buildPrompt;
+$("copyPrompt").onclick=()=>copyText(join([v("p_output"),v("p_neg_output")?`\nNegative:\n${v("p_neg_output")}`:""],"\n"));
+$("sharePrompt").onclick=()=>shareText("Image Prompt",join([v("p_output"),v("p_neg_output")?`\nNegative:\n${v("p_neg_output")}`:""],"\n"));
+$("makeAIRequest").onclick=()=>{
+  const s=v("p_source");if(!s){toast("元の説明を入力してください");return}
+  const req=`以下の曖昧な日本語を、${$("p_target").selectedOptions[0].text}で使いやすい画像生成プロンプトへ変換してください。
+元の意味を勝手に削除・変更せず、曖昧な点を補完した場合は明示してください。
+必ず次の項目に分離してください：
+subject / hair / face / outfit / pose / camera / background / lighting / style / extra / negative
+
+【元の説明】
+${s}
+
+【出力条件】
+- 後から各カテゴリだけ差し替えられるようにする。
+- 日本語の固有条件を保持する。
+- 不明な部分を無理に断定しない。
+- 最後に、選択規格へ統合した完成プロンプトも出す。`;
+  setv("p_extra",req);activateSub("prompt","pscene");toast("AI整形依頼文を補足欄へ作成しました");
+};
+
+$("restoreButton").onclick=()=>$("restoreFile").click();
+$("makeBackup").onclick=()=>{const o={schema:"OCPS-BACKUP-2",exported_at:new Date().toISOString(),characters:getChars(),customWords:getCustomWords(),lastPrompt:safeParse(localStorage.getItem(STORE.prompt),null)};setv("backupArea",JSON.stringify(o,null,2));toast("作成しました")};
+$("copyBackup").onclick=()=>copyText(v("backupArea"));
+$("restoreFile").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const o=JSON.parse(await f.text());if(!Array.isArray(o.characters))throw Error("形式が違います");localStorage.setItem(STORE.chars,JSON.stringify(o.characters));localStorage.setItem(STORE.words,JSON.stringify(o.customWords||[]));if(o.lastPrompt)localStorage.setItem(STORE.prompt,JSON.stringify(o.lastPrompt));renderSaved();renderLib();toast("復元しました")}catch(err){toast("読み込み失敗："+err.message)}};
+
+if(!v("c_id"))setv("c_id",uid());
+initCustomSelects();initLikert();initMatrices();initAIChoices();renderSaved();renderLib();
 </script>
 </body>
 </html>
