@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#111827">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="OC Prompt Studio">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="stylesheet" href="./styles.css">
+  <title>OC Prompt Studio</title>
+</head>
+<body>
+<header class="app-header">
+  <div>
+    <div class="eyebrow">iPhone / PWA prototype</div>
+    <h1>OC Prompt Studio</h1>
+    <p>キャラクター設計 × 画像生成プロンプト設計</p>
+  </div>
+  <button id="installHintBtn" class="ghost">iPhoneへ追加</button>
+</header>
+
+<nav class="tabs" aria-label="Main tabs">
+  <button class="tab active" data-tab="character">キャラ設計</button>
+  <button class="tab" data-tab="prompt">プロンプト</button>
+  <button class="tab" data-tab="library">語彙ライブラリ</button>
+  <button class="tab" data-tab="data">保存/読込</button>
+</nav>
+
+<main>
+<section id="character" class="panel active">
+  <div class="section-title">
+    <div><span class="step">01</span><h2>基本情報</h2></div>
+    <button id="newCharacterBtn" class="ghost danger">新規化</button>
+  </div>
+
+  <div class="grid two">
+    <label>名前
+      <input id="c_name" placeholder="例：リネット">
+    </label>
+    <label>固有ID
+      <div class="row compact">
+        <input id="c_id" readonly>
+        <button id="regenIdBtn" class="ghost">再発行</button>
+      </div>
+    </label>
+    <label>読み / 別名
+      <input id="c_alias" placeholder="例：Lynette / リン">
+    </label>
+    <label>作品・企画
+      <input id="c_project" placeholder="例：紅蜜の迷宮">
+    </label>
+    <label>役割
+      <select id="c_role">
+        <option value="お任せ">お任せ</option>
+        <option>主人公</option><option>ヒロイン</option><option>仲間</option>
+        <option>ライバル</option><option>敵対者</option><option>案内役</option>
+        <option>モブ寄り主要人物</option><option>その他</option>
+      </select>
+    </label>
+    <label>舞台 / 世界観
+      <input id="c_world" placeholder="例：中世欧風ファンタジー">
+    </label>
+  </div>
+
+  <label>一文コンセプト
+    <textarea id="c_concept" rows="3" placeholder="曖昧でOK。例：見た目は可愛いが、好奇心が強すぎて危険に首を突っ込む駆け出し魔法使い"></textarea>
+  </label>
+
+  <div class="section-title"><div><span class="step">02</span><h2>方向性マトリクス</h2></div></div>
+  <p class="help">四角の好きな位置をタップ。数値も保存されるため、AIに「どちら寄りか」を伝えやすくなります。</p>
+  <div class="matrix-grid">
+    <div class="matrix-card">
+      <h3>外見印象</h3>
+      <div class="matrix" data-x="c_visual_x" data-y="c_visual_y">
+        <span class="label top">華やか</span><span class="label bottom">素朴</span>
+        <span class="label left">可愛い</span><span class="label right">格好いい</span>
+        <div class="dot"></div>
+      </div>
+      <div class="matrix-values"><span>可愛い↔格好いい: <b id="c_visual_x_v">50</b></span><span>素朴↔華やか: <b id="c_visual_y_v">50</b></span></div>
+      <input id="c_visual_x" type="hidden" value="50"><input id="c_visual_y" type="hidden" value="50">
+    </div>
+    <div class="matrix-card">
+      <h3>対人傾向</h3>
+      <div class="matrix" data-x="c_social_x" data-y="c_social_y">
+        <span class="label top">能動的</span><span class="label bottom">受動的</span>
+        <span class="label left">内向的</span><span class="label right">外向的</span>
+        <div class="dot"></div>
+      </div>
+      <div class="matrix-values"><span>内向↔外向: <b id="c_social_x_v">50</b></span><span>受動↔能動: <b id="c_social_y_v">50</b></span></div>
+      <input id="c_social_x" type="hidden" value="50"><input id="c_social_y" type="hidden" value="50">
+    </div>
+  </div>
+
+  <div class="section-title"><div><span class="step">03</span><h2>性格リッカート尺度</h2></div></div>
+  <div id="likertArea" class="likert-grid"></div>
+
+  <div class="section-title"><div><span class="step">04</span><h2>容姿・デザイン</h2></div></div>
+  <div class="grid two">
+    <label>年齢感
+      <select id="c_agefeel"><option>お任せ</option><option>幼い</option><option>ローティーン</option><option>ミドルティーン</option><option>ハイティーン</option><option>20代前半</option><option>20代後半</option><option>30代</option><option>年齢不詳</option></select>
+    </label>
+    <label>身長感
+      <select id="c_height"><option>お任せ</option><option>かなり低い</option><option>やや低い</option><option>平均的</option><option>やや高い</option><option>かなり高い</option></select>
+    </label>
+    <label>体型
+      <input id="c_body" list="bodyTypes" placeholder="お任せ / 華奢 / 標準 / グラマー ...">
+    </label>
+    <label>肌
+      <input id="c_skin" placeholder="例：明るい肌、健康的">
+    </label>
+    <label>髪色
+      <input id="c_hair_color" placeholder="例：赤みのあるダークブラウン">
+    </label>
+    <label>髪型
+      <input id="c_hair_style" list="hairStyles" placeholder="例：ハーフアップ、姫カット">
+    </label>
+    <label>瞳
+      <input id="c_eyes" placeholder="例：大きめの翡翠色、やや垂れ目">
+    </label>
+    <label>顔立ち
+      <input id="c_face" placeholder="例：可愛い系、丸み、鼻は小さめ">
+    </label>
+    <label>衣装
+      <input id="c_outfit" list="outfits" placeholder="例：軽装の旅装、ショートケープ">
+    </label>
+    <label>モチーフ
+      <input id="c_motif" placeholder="例：月、鈴、紅い蜜">
+    </label>
+    <label>配色
+      <input id="c_palette" placeholder="例：アイボリー＋深紅＋金">
+    </label>
+    <label>特徴物
+      <input id="c_accessory" placeholder="例：左耳だけのピアス、星形ヘアピン">
+    </label>
+  </div>
+
+  <div class="section-title"><div><span class="step">05</span><h2>設定・関係性</h2></div></div>
+  <label>性格・口調の自由記述
+    <textarea id="c_personality_notes" rows="4" placeholder="例：初対面では敬語。慣れると語尾が砕ける。怖がりだが好奇心に負ける。"></textarea>
+  </label>
+  <label>背景 / 経歴
+    <textarea id="c_backstory" rows="4"></textarea>
+  </label>
+  <label>目的・欲求
+    <textarea id="c_goal" rows="3"></textarea>
+  </label>
+  <label>弱点 / 葛藤
+    <textarea id="c_conflict" rows="3"></textarea>
+  </label>
+  <label>関係性（1行1件。固有IDを含めると紐付けしやすい）
+    <textarea id="c_relations" rows="4" placeholder="CHAR-XXXX | ミカナ | 友人 / 少し警戒"></textarea>
+  </label>
+  <label>検索タグ
+    <input id="c_tags" placeholder="#OC #fantasy #magic #project_紅蜜の迷宮">
+  </label>
+
+  <div class="section-title"><div><span class="step">06</span><h2>AIに決めてほしい項目</h2></div></div>
+  <div id="autoFields" class="chipbox"></div>
+
+  <div class="actions sticky-actions">
+    <button id="saveCharacterBtn" class="primary">キャラを保存</button>
+    <button id="linkToPromptBtn">プロンプトへ反映</button>
+    <button id="exportTextBtn">AI用テキスト</button>
+    <button id="exportJsonBtn">JSON</button>
+    <button id="exportLoreBtn">Lorebook</button>
+  </div>
+
+  <div id="exportArea" class="export-card hidden">
+    <div class="row between"><h3 id="exportTitle">出力</h3><div class="row compact"><button id="copyExportBtn">コピー</button><button id="shareExportBtn">共有</button></div></div>
+    <textarea id="exportText" rows="18"></textarea>
+  </div>
+</section>
+
+<section id="prompt" class="panel">
+  <div class="section-title"><div><span class="step">01</span><h2>曖昧な日本語から変換</h2></div></div>
+  <label>元の説明
+    <textarea id="p_source" rows="5" placeholder="例：雨の夜の古い街で、赤茶の長い髪の女の子が振り返っている。少し寂しそう。映画っぽく透明感のある絵。"></textarea>
+  </label>
+  <div class="grid two">
+    <label>出力規格
+      <select id="p_target">
+        <option value="novelai">NovelAI向け</option>
+        <option value="sdxl">Stable Diffusion / SDXL向け</option>
+        <option value="niji">NijiJourney向け</option>
+        <option value="generic">汎用自然文</option>
+      </select>
+    </label>
+    <label>変換の強さ
+      <select id="p_expand">
+        <option value="safe">原文重視</option>
+        <option value="balanced" selected>補完あり</option>
+        <option value="rich">積極的に補完</option>
+      </select>
+    </label>
+  </div>
+  <div class="actions">
+    <button id="convertPromptBtn" class="primary">自動分解・変換</button>
+    <button id="applyCharacterBtn">保存キャラから反映</button>
+    <button id="clearPromptBtn" class="ghost danger">クリア</button>
+  </div>
+  <p class="help">この試作版は端末内の辞書とルールで変換します。未解釈部分は捨てず「補足」に残します。</p>
+
+  <div class="section-title"><div><span class="step">02</span><h2>部分編集</h2></div></div>
+  <div class="prompt-sections">
+    <label>主体 / キャラクター<textarea id="p_subject" rows="3"></textarea></label>
+    <label>髪<textarea id="p_hair" rows="3"></textarea></label>
+    <label>顔・目・表情<textarea id="p_face" rows="3"></textarea></label>
+    <label>衣装・装飾<textarea id="p_outfit" rows="3"></textarea></label>
+    <label>ポーズ・動作<textarea id="p_pose" rows="3"></textarea></label>
+    <label>構図・カメラ<textarea id="p_camera" rows="3"></textarea></label>
+    <label>背景<textarea id="p_background" rows="3"></textarea></label>
+    <label>光・色・空気感<textarea id="p_light" rows="3"></textarea></label>
+    <label>画風・質感<textarea id="p_style" rows="3"></textarea></label>
+    <label>補足 / 未解釈<textarea id="p_extra" rows="3"></textarea></label>
+    <label>ネガティブ<textarea id="p_negative" rows="4"></textarea></label>
+  </div>
+
+  <div class="section-title"><div><span class="step">03</span><h2>規格別オプション</h2></div></div>
+  <div class="grid three">
+    <label>アスペクト比
+      <select id="p_ar"><option>2:3</option><option>3:4</option><option>1:1</option><option>4:3</option><option>16:9</option><option>9:16</option></select>
+    </label>
+    <label>Niji stylize
+      <input id="p_stylize" type="number" value="100" min="0" max="1000">
+    </label>
+    <label>SD重み記法
+      <select id="p_weight"><option value="plain">なし</option><option value="paren">重要語を括弧</option></select>
+    </label>
+  </div>
+
+  <div class="actions sticky-actions">
+    <button id="buildPromptBtn" class="primary">最終プロンプト生成</button>
+    <button id="copyPromptBtn">コピー</button>
+    <button id="sharePromptBtn">共有</button>
+  </div>
+
+  <div class="export-card">
+    <h3>Positive / Main</h3>
+    <textarea id="p_output" rows="12"></textarea>
+    <h3>Negative</h3>
+    <textarea id="p_neg_output" rows="7"></textarea>
+  </div>
+</section>
+
+<section id="library" class="panel">
+  <div class="section-title"><div><span class="step">01</span><h2>語彙ライブラリ</h2></div></div>
+  <label>検索
+    <input id="libSearch" placeholder="例：髪 / braid / ゴシック / 路地">
+  </label>
+  <div class="row wrap" id="libCategoryRow"></div>
+  <p class="help">チップをタップするとプロンプトの対応欄へ追加。長押し不要です。</p>
+  <div id="libraryList" class="library-list"></div>
+
+  <div class="section-title"><div><span class="step">02</span><h2>自作語彙</h2></div></div>
+  <div class="grid three">
+    <label>カテゴリ
+      <select id="customCat"><option>hair</option><option>face</option><option>outfit</option><option>pose</option><option>camera</option><option>background</option><option>light</option><option>style</option><option>negative</option></select>
+    </label>
+    <label>表示名<input id="customJa" placeholder="例：外ハネミディアム"></label>
+    <label>プロンプト語<input id="customEn" placeholder="例：medium hair with flipped-out ends"></label>
+  </div>
+  <button id="addCustomWordBtn" class="primary">語彙を追加</button>
+</section>
+
+<section id="data" class="panel">
+  <div class="section-title"><div><span class="step">01</span><h2>保存キャラクター</h2></div></div>
+  <div id="characterList" class="card-list"></div>
+
+  <div class="section-title"><div><span class="step">02</span><h2>全データのバックアップ</h2></div></div>
+  <div class="actions">
+    <button id="backupBtn" class="primary">JSONバックアップを作成</button>
+    <label class="file-button">JSONを読み込む<input id="restoreFile" type="file" accept=".json,application/json"></label>
+    <button id="copyBackupBtn">バックアップをコピー</button>
+  </div>
+  <textarea id="backupArea" rows="14" placeholder="バックアップJSON"></textarea>
+
+  <div class="info-card">
+    <h3>Appleメモ向け運用</h3>
+    <p>AI用テキストの先頭に固有ID、末尾に #タグ を入れます。Appleメモでは #OC、#作品名、#役割、#属性 などで検索できます。別キャラとの関係は固有IDを記載しておくと横断検索が容易です。</p>
+  </div>
+</section>
+</main>
+
+<datalist id="hairStyles"></datalist>
+<datalist id="outfits"></datalist>
+<datalist id="bodyTypes">
+  <option value="華奢"><option value="細身"><option value="標準"><option value="健康的"><option value="筋肉質"><option value="グラマー"><option value="小柄"><option value="長身">
+</datalist>
+
+<div id="toast" class="toast" role="status"></div>
+
+<script src="./app.js"></script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>
